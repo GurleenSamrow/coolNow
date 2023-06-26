@@ -1,0 +1,14 @@
+{
+  "apps": [
+    {
+      "exec_mode": "fork_mode",
+      "script": "app.js",
+      "name": "ubercool",
+      "node_args": [],
+      "env": {
+        "PORT": 4000,
+        "NODE_ENV":"development"
+      }
+    }
+  ]
+ }
