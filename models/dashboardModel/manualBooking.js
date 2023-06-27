@@ -1,15 +1,16 @@
 (function () {
     var mongoose = require('mongoose');
-    var leadSchema = new mongoose.Schema({
-        userId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'user',
-                required: [true, 'UserId is required'] 
+    var manualBookingSchema = new mongoose.Schema({
+        userName: {
+            type: String,
+            trim: true,
+            required: true
         },
         technician_id: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'user',
-			required: false
+			required: true
+
 		},
         email: {
             type: String,
@@ -28,27 +29,27 @@
             required: [true, 'phone is required']
         },
         address: {
-            type: string,
+            type: String,
             trim: true,
             required: [true, 'Addess is required']
         },
         date: {
-            type: string,
+            type: Date,
             trim: true,
             required: [true, 'date is required']
         },
         bookingSlot: {
-            type: string,
+            type: String,
             trim: true,
             required: [true, 'bookingSlot is required']
         },
         chooseServices: {
-            type: string,
+            type: String,
             trim: true,
             required: [true, 'chooseServices is required']
         },
         note: {
-            type: string,
+            type: String,
             trim: true,
             required: [true, 'Note is required']
         },
@@ -56,7 +57,7 @@
         updated_date: { type: Date, default: Date.now }	
 
     });
-    var leadUser = mongoose.model('leadSource', leadSchema);
+    var manualBooking = mongoose.model('manualBooking', manualBookingSchema);
 	
-    module.exports = leadUser;
+    module.exports = manualBooking;
 })();

@@ -1,16 +1,17 @@
 (function () {
     var mongoose = require('mongoose');
     var leadSchema = new mongoose.Schema({
+        memberId: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'user',
+            required: [true, ' memberId is required'] 
+    }],
         teamNme: {
             type: String,
             trim: true,
             required: [true, 'TeamName is required'] 
         },
-        member: {
-            type: Array,
-            trim: true,
-            required: [true, 'member is required']
-            },
+    
        Vehicle: {
             type: String,
             trim: true,
@@ -31,7 +32,7 @@
         updated_date: { type: Date, default: Date.now }	
 
     });
-    var leadUser = mongoose.model('leadSource', leadSchema);
+    var leadUser = mongoose.model('techTeam', leadSchema);
 	
     module.exports = leadUser;
 })();
