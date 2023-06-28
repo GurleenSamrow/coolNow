@@ -31,4 +31,18 @@ module.exports = function (app) {
     app.post('/deleteManualBooking', dashboardController.deleteManualBooking);
 
 
+
+    //Services..................................
+    app.post('/addServices', dashboardController.addServices);
+    app.post('/updateServices', dashboardController.updatedServices);
+    app.get('/GetAllServices', dashboardController.getAllServices);
+    app.post('/deleteServices', dashboardController.deleteServices);
+
+
+     //Banner..................................
+     app.post('/addBanner', dashboardController.addBanner);
+     app.post('/updatebanner', dashboardController.updatedBanner);
+     app.get('/GetAllBanner', dashboardController.getAllBanner);
+     app.post('/deleteBanner', dashboardController.deleteBanner);
+
 };

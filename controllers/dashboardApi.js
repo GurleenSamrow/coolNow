@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const promoCode = require('../models/dashboardModel/promoCode');
 const techteam = require('../models/dashboardModel/techTeam');
 const manualBooking = require('../models/dashboardModel/manualBooking');
+const services = require('../models/dashboardModel/services');
+const banner = require('../models/dashboardModel/banner');
 
 //Add manualUser
 module.exports.addManualUser = async (req,res) => {
@@ -345,6 +347,197 @@ module.exports.deleteManualBooking = async (req,res) => {
         res.send({ success: true, message: "ManualBooking Delete Successfully", data: leadData })
     }else{
         res.send({ success: false, message: "ManualBooking Does'nt Delete", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+
+//addServices.................
+module.exports.addServices = async (req,res) => {
+    try {
+        const { title, description, sub_service,price,commision_margin,commision_amount,cost,icon,status} = req.body;
+        if(title && description  && sub_service && price && commision_margin && commision_amount && cost && icon  && status){
+        const ServicesInfo = new services({
+            title: title,
+            description: description,
+            sub_service:sub_service,
+            price:price,
+            commision_margin:commision_margin,
+            commision_amount:commision_amount,
+            cost:cost,
+            icon:icon,
+            status:status
+      })
+            await ServicesInfo.save()
+    res.send({ success: true, message: "Service Add Successfully", data: ServicesInfo })
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//updatedServices.....................
+module.exports.updatedServices = async (req,res) => {
+    try {
+        const { title, description, sub_service,price,commision_margin,commision_amount,cost,icon,status,_id} = req.body;
+        if(title && description  && sub_service && price && commision_margin && commision_amount && cost && icon && status && _id){
+            const servicesData = await services.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                { $set: {
+                    title: title,
+                    description: description,
+                    sub_service:sub_service,
+                    price:price,
+                    commision_margin:commision_margin,
+                    commision_amount:commision_amount,
+                    cost:cost,
+                    icon:icon,
+                    status:status
+                }
+      })
+      if(servicesData.modifiedCount === 1){
+    res.send({ success: true, message: "Service  Updated Successfully", data: null })
+      }else{
+        res.send({ success: false, message: "Service Don't Updated", data: null })
+      }
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        console.log("err",err);
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+
+//list services.......................................
+module.exports.getAllServices = async (req,res) => {
+    try {
+    const servicesData = await services.find()
+    if(servicesData.length >0){
+        res.send({ success: true, message: "Get All Services Successfully", data: servicesData })
+    }else{
+        res.send({ success: true, message: "Not Found Services", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//deleteServices.....................................
+module.exports.deleteServices = async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const servicesData = await services.findOneAndDelete({id:_id})
+    if(servicesData){ 
+        res.send({ success: true, message: "Services Delete Successfully", data: servicesData })
+    }else{
+        res.send({ success: false, message: "Services Does'nt Delete", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+module.exports.addBanner = async (req,res) => {
+    try {
+        const { banner_title, banner_description, banner_image,active,scheduleDate,scheduleTime} = req.body;
+        if(banner_title && banner_description  && banner_image && active,scheduleDate,scheduleTime){
+        const bannerInfo = new banner({
+            banner_title: banner_title,
+            banner_description: banner_description,
+            banner_image:banner_image,
+            active:active,
+            scheduleDate:scheduleDate,
+            scheduleTime:scheduleTime
+      })
+            await bannerInfo.save()
+    res.send({ success: true, message: "Banner Add Successfully", data: bannerInfo })
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//updatedBanner
+module.exports.updatedBanner = async (req,res) => {
+    try {
+        const { banner_title, banner_description, banner_image,active,scheduleDate,scheduleTime,_id} = req.body;
+        if(banner_title && banner_description  && banner_image && active,scheduleDate,scheduleTime){
+            const bannerData = await banner.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                { $set: {
+            banner_title: banner_title,
+            banner_description: banner_description,
+            banner_image:banner_image,
+            active:active,
+            scheduleDate:scheduleDate,
+            scheduleTime:scheduleTime
+                }
+      })
+      if(bannerData.modifiedCount === 1){
+    res.send({ success: true, message: "Banner Updated Successfully", data: null })
+      }else{
+        res.send({ success: false, message: "Banner Don't Updated", data: null })
+      }
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//addServices.................
+module.exports.addServices = async (req,res) => {
+    try {
+        const { title, description, sub_service,price,commision_margin,commision_amount,cost,icon,status} = req.body;
+        if(title && description  && sub_service && price && commision_margin && commision_amount && cost && icon  && status){
+        const ServicesInfo = new services({
+            title: title,
+            description: description,
+            sub_service:sub_service,
+            price:price,
+            commision_margin:commision_margin,
+            commision_amount:commision_amount,
+            cost:cost,
+            icon:icon,
+            status:status
+      })
+            await ServicesInfo.save()
+    res.send({ success: true, message: "Service Add Successfully", data: ServicesInfo })
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//list banner.......................................
+module.exports.getAllBanner = async (req,res) => {
+    try {
+    const bannerData = await banner.find()
+    if(bannerData.length >0){
+        res.send({ success: true, message: "Get All Banner Successfully", data: bannerData })
+    }else{
+        res.send({ success: true, message: "Not Found Banner", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//deletebanner.....................................
+module.exports.deleteBanner = async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const deleteData = await banner.findOneAndDelete({id:_id})
+    if(deleteData){ 
+        res.send({ success: true, message: "Banner Delete Successfully", data: deleteData })
+    }else{
+        res.send({ success: false, message: "Banner Does'nt Delete", data: null })
     }
      } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
