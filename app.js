@@ -75,7 +75,7 @@ console.log('The magic happens on port ' + port);
 
 // Define & Initialize mongo db connection...
 var mongoose = require(__dirname + '/node_modules/mongoose');
-mongoose.connect('mongodb://127.0.0.1/coolnow',{
+mongoose.connect('mongodb+srv://aryasaini2525:shakti@cluster0.vswgysz.mongodb.net/coolnow',{
 	useNewUrlParser: true, 
     useUnifiedTopology: true
 });
