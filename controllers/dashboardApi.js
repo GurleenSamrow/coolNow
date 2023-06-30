@@ -7,6 +7,8 @@ const techteam = require('../models/dashboardModel/techTeam');
 const manualBooking = require('../models/dashboardModel/manualBooking');
 const services = require('../models/dashboardModel/services');
 const banner = require('../models/dashboardModel/banner');
+const suplier = require('../models/dashboardModel/supplier');
+const supplier = require('../models/dashboardModel/supplier');
 
 //Add manualUser
 module.exports.addManualUser = async (req,res) => {
@@ -538,6 +540,92 @@ module.exports.deleteBanner = async (req,res) => {
         res.send({ success: true, message: "Banner Delete Successfully", data: deleteData })
     }else{
         res.send({ success: false, message: "Banner Does'nt Delete", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+
+//addSupplier......................
+module.exports.addSupplier = async (req,res) => {
+    try {
+        const { companyName, email, contactPerson, mobileNumber, uenNumber, notes, address } = req.body;
+        if(companyName && email && contactPerson && mobileNumber && uenNumber && address && notes){   
+            const addSupplier = new supplier({
+                companyName: companyName,
+                email: email,
+                contactPerson: contactPerson,
+                mobileNumber: mobileNumber,
+                uenNumber: uenNumber,
+                address: address,
+                notes: notes,
+            })
+            await addSupplier.save()
+            res.send({ success: true, message: "Suppiler Add Successfully", data: addSupplier })
+    }
+    else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//updateSupplier.............................
+module.exports.updatedSupplier = async (req,res) => {
+    try {
+        const { companyName, email, contactPerson, mobileNumber, uenNumber, notes, address,_id } = req.body;
+        if(companyName && email && contactPerson && mobileNumber && uenNumber && address && notes && _id){   
+            const supplierData = await suplier.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                { $set: {
+                    companyName: companyName,
+                    email: email,
+                    contactPerson: contactPerson,
+                    mobileNumber: mobileNumber,
+                    uenNumber: uenNumber,
+                    address: address,
+                    notes: notes,
+                }
+      })
+      if(supplierData.modifiedCount === 1){
+    res.send({ success: true, message: "Supplier Updated Successfully", data: null })
+      }else{
+        res.send({ success: false, message: "Supplier Don't Updated", data: null })
+      }
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+
+//list Supplier.......................................
+module.exports.getAllSupplier = async (req,res) => {
+    try {
+    const supplierData = await suplier.find()
+    if(supplierData.length >0){
+        res.send({ success: true, message: "Get All Supplier Successfully", data: supplierData })
+    }else{
+        res.send({ success: true, message: "Not Found Supplier", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//deletesupplier....................................
+module.exports.deleteSupplier = async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const deleteData = await supplier.findOneAndDelete({id:_id})
+    if(deleteData){ 
+        res.send({ success: true, message: "Supplier Delete Successfully", data: deleteData })
+    }else{
+        res.send({ success: false, message: "Supplier Does'nt Delete", data: null })
     }
      } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })

@@ -45,4 +45,14 @@ module.exports = function (app) {
      app.get('/GetAllBanner', dashboardController.getAllBanner);
      app.post('/deleteBanner', dashboardController.deleteBanner);
 
+
+      //supplier................................
+      app.post('/addSupplier', dashboardController.addSupplier);
+      app.post('/updateSupplier', dashboardController.updatedSupplier);
+      app.get('/getAllSupplier', dashboardController.getAllSupplier);
+      app.post('/deleteSupplier', dashboardController.deleteSupplier);
+
+
+
+
 };
