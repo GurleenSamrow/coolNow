@@ -10,6 +10,14 @@ module.exports = function (app) {
     app.get('/GetUserDetails', dashboardController.getUserById);
     app.post('/DeleteUser', dashboardController.deleteUser);
 
+    //addTechnician
+    app.post('/addTechnician', dashboardController.addTechnician);
+    app.post('/updateTechnician', dashboardController.updateTechnician);
+    app.get('/GetAllTechnician', dashboardController.getAllTechnician);
+    app.get('/GetTechnicianDetails', dashboardController.getTechnicianById);
+    app.post('/DeleteTechnician', dashboardController.deleteTechnician);
+
+
     //LeadSource...........................
     app.post('/addLeadSource', dashboardController.addLead);
     app.post('/updateLeadSource', dashboardController.updateLead);
@@ -43,18 +51,18 @@ module.exports = function (app) {
     app.post('/deleteServices', dashboardController.deleteServices);
 
 
-     //Banner..................................
-     app.post('/addBanner', dashboardController.addBanner);
-     app.post('/updatebanner', dashboardController.updatedBanner);
-     app.get('/GetAllBanner', dashboardController.getAllBanner);
-     app.post('/deleteBanner', dashboardController.deleteBanner);
+    //Banner..................................
+    app.post('/addBanner', dashboardController.addBanner);
+    app.post('/updatebanner', dashboardController.updatedBanner);
+    app.get('/GetAllBanner', dashboardController.getAllBanner);
+    app.post('/deleteBanner', dashboardController.deleteBanner);
 
 
-      //supplier................................
-      app.post('/addSupplier', dashboardController.addSupplier);
-      app.post('/updateSupplier', dashboardController.updatedSupplier);
-      app.get('/getAllSupplier', dashboardController.getAllSupplier);
-      app.post('/deleteSupplier', dashboardController.deleteSupplier);
+    //supplier................................
+    app.post('/addSupplier', dashboardController.addSupplier);
+    app.post('/updateSupplier', dashboardController.updatedSupplier);
+    app.get('/getAllSupplier', dashboardController.getAllSupplier);
+    app.post('/deleteSupplier', dashboardController.deleteSupplier);
 
 
 

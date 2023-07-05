@@ -94,6 +94,14 @@
             trim: true,
             //required: [true, 'LeadSource is required']
         },
+        designation: {
+            type: String,
+            trim: true,
+        },
+        skill: {
+            type: Array,
+            //required: [true, 'Alias is required']
+        },
         created_date: { type: Date, default: Date.now }	,
         updated_date: { type: Date, default: Date.now }	
 

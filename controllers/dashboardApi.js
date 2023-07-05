@@ -704,3 +704,104 @@ module.exports.deleteSupplier = async (req,res) => {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
 }
+//addTechnician
+module.exports.addTechnician = async (req,res) => {
+    try {
+        const { name,phone, email, password, profile_photo,designation,skill} = req.body;
+        if(name && email && phone && password && skill && designation && profile_photo){
+          const dataInfo = await ManualUser.find({ email: email })
+        if (dataInfo.length > 0) {
+            res.send({ success: false, message: "Email Already Exists", data: null })
+        } else {
+            const manualUser = new ManualUser({
+                name: name,
+                email: email,
+                password: password,
+                designation: designation,
+                skill: skill,
+                profile_photo: profile_photo,
+                phone:phone,
+                user_type:"T"
+            })
+            await manualUser.save()
+            res.send({ success: true, message: "Technician Add Successfully", data: manualUser })
+        }
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//updateTechnician.........................................
+module.exports.updateTechnician = async (req,res) => {
+    try {
+        const { name,phone, email, profile_photo,designation,skill,_id} = req.body;
+        if(name && email && phone && skill && designation && profile_photo && _id){
+    const userData = await ManualUser.updateOne(
+        { _id: mongoose.Types.ObjectId(_id) },
+        { $set: {
+            name: name,
+            email: email,
+            designation: designation,
+            skill: skill,
+            profile_photo: profile_photo,
+            phone:phone,
+            } }
+      );
+      if(userData.modifiedCount === 1){
+     res.send({ success: true, message: "Technician Updated Successfully", data: null })
+      }else{
+        res.send({ success: false, message: "Technician Don't Updated", data: null })
+      }
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getAllTechnician
+module.exports.getAllTechnician = async (req,res) => {
+    try {
+    const userData = await ManualUser.find({user_type:"T"})
+    if(userData.length >0){
+        res.send({ success: true, message: "Get All Technician Successfully", data: userData })
+    }else{
+        res.send({ success: true, message: "Not Found Technician", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//deleteTechnician
+module.exports.deleteTechnician= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const userData = await ManualUser.findOneAndDelete({_id:_id})
+    if(userData){
+        res.send({ success: true, message: "Technician Deleted Successfully", data: userData })
+    }else{
+        res.send({ success: true, message: "Not Found Technician", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//getByIdTechnician
+module.exports.getTechnicianById= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const userData = await ManualUser.findById({_id:_id})
+    if(userData){
+        res.send({ success: true, message: "Get Technician Details Successfully", data: userData })
+    }else{
+        res.send({ success: true, message: "Not Found Technician", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
