@@ -38,7 +38,7 @@
 		created_at: { type: Date, default: Date.now }	
 	});
 
-	var Service = mongoose.model('service', serviceSchema);
+	var Service = mongoose.model('services', serviceSchema);
 
 	module.exports = Service;
 })();

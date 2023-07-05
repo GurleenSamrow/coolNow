@@ -1,4 +1,4 @@
-const ManualUser = require('../models/dashboardModel/manualUser')
+const ManualUser = require('../models/user')
 const soucreLead = require('../models/dashboardModel/leadSource')
 const PromoCode = require('../models/dashboardModel/promoCode')
 const mongoose = require('mongoose');
@@ -13,11 +13,11 @@ const supplier = require('../models/dashboardModel/supplier');
 //Add manualUser
 module.exports.addManualUser = async (req,res) => {
     try {
-        const { name, email, gender, password, marketPlace, alias, leadSource, address, profile_photo } = req.body;
-        if(name & email & gender & password & marketPlace & alias & leadSource & address & profile_photo){
+        const { name,phone, email, gender, password, marketPlace, alias, leadSource, address, profile_photo } = req.body;
+        if(name && email && phone && gender && password && marketPlace && alias && leadSource && address && profile_photo){
           const dataInfo = await ManualUser.find({ email: email })
         if (dataInfo.length > 0) {
-            res.send({ success: false, message: "Email Already Exists", data: dataInfo })
+            res.send({ success: false, message: "Email Already Exists", data: null })
         } else {
             const manualUser = new ManualUser({
                 name: name,
@@ -28,7 +28,8 @@ module.exports.addManualUser = async (req,res) => {
                 alias: alias,
                 leadSource: leadSource,
                 address: address,
-                profile_photo: profile_photo
+                profile_photo: profile_photo,
+                phone:phone
             })
             await manualUser.save()
             res.send({ success: true, message: "User Add Successfully", data: manualUser })
@@ -37,6 +38,78 @@ module.exports.addManualUser = async (req,res) => {
     res.send({ success: false, message: "All Fields Are Required", data: null })
     }
     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//updateuser.........................................
+module.exports.updateUser = async (req,res) => {
+    try {
+        const { name,phone, email, gender, marketPlace, alias, leadSource, address, profile_photo,_id } = req.body;
+        if(name && email && phone && gender && marketPlace && alias && leadSource && address && profile_photo && _id){
+    const userData = await ManualUser.updateOne(
+        { _id: mongoose.Types.ObjectId(_id) },
+        { $set: {
+                name: name,
+                email: email,
+                gender: gender,
+                marketPlace: marketPlace,
+                alias: alias,
+                leadSource: leadSource,
+                address: address,
+                profile_photo: profile_photo ,
+                phone:phone
+            } }
+      );
+      if(userData.modifiedCount === 1){
+     res.send({ success: true, message: "User Updated Successfully", data: null })
+      }else{
+        res.send({ success: false, message: "User Don't Updated", data: null })
+      }
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//GetUserAll
+module.exports.getAllUser = async (req,res) => {
+    try {
+    const userData = await ManualUser.find()
+    if(userData.length >0){
+        res.send({ success: true, message: "Get All User Successfully", data: userData })
+    }else{
+        res.send({ success: true, message: "Not Found User", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//DeleteUser
+module.exports.deleteUser= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const userData = await ManualUser.findOneAndDelete({_id:_id})
+    if(userData){
+        res.send({ success: true, message: "User Deleted Successfully", data: userData })
+    }else{
+        res.send({ success: true, message: "Not Found User", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//getUserById
+module.exports.getUserById= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const userData = await ManualUser.findById({_id:_id})
+    if(userData){
+        res.send({ success: true, message: "Get User Details Successfully", data: userData })
+    }else{
+        res.send({ success: true, message: "Not Found User", data: null })
+    }
+     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
 }
@@ -72,7 +145,7 @@ module.exports.updateLead = async (req,res) => {
             date: date,
             whoCreated: whoCreated } }
       );
-      if(couponData.modifiedCount === 1){
+      if(leadData.modifiedCount === 1){
      res.send({ success: true, message: "Lead Updated Successfully", data: null })
       }else{
         res.send({ success: false, message: "Lead Don't Updated", data: null })
@@ -101,7 +174,7 @@ module.exports.getAllLead = async (req,res) => {
 module.exports.deleteLead = async (req,res) => {
     try {
         const{_id} =req.body;
-    const leadData = await soucreLead.findOneAndDelete({id:_id})
+    const leadData = await soucreLead.findOneAndDelete({_id:_id})
     if(leadData){
         res.send({ success: true, message: "Lead Delete Successfully", data: leadData })
     }else{

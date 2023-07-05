@@ -5,6 +5,10 @@ module.exports = function (app) {
 
 
     app.post('/addManualUser', dashboardController.addManualUser);
+    app.post('/updateManualUser', dashboardController.updateUser);
+    app.get('/GetAllUser', dashboardController.getAllUser);
+    app.get('/GetUserDetails', dashboardController.getUserById);
+    app.post('/DeleteUser', dashboardController.deleteUser);
 
     //LeadSource...........................
     app.post('/addLeadSource', dashboardController.addLead);

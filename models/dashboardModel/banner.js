@@ -29,7 +29,7 @@
       created_at: { type: Date, default: Date.now }
     });
   
-    var Banner = mongoose.model('banner', bannerSchema);
+    var Banner = mongoose.model('banners', bannerSchema);
     module.exports = Banner;
   })();
   
