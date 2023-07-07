@@ -14,9 +14,14 @@ var request = require(__dirname + '/node_modules/request');
 var http = require('http');
 var helper = require('./helper.js');
 var multer = require('multer');
+var cors = require('cors')
 const cF  = require('./helpers/cF');
 
 var app      = express();
+//useCors
+app.use(cors({
+    methods: ['GET','POST','DELETE','UPDATE','PUT','PATCH']
+}));
 
 console.log("port1 "+process.env.PORT);
 var port     = process.env.PORT || 8081;
@@ -83,7 +88,7 @@ mongoose.connect('mongodb+srv://aryasaini2525:shakti@cluster0.vswgysz.mongodb.ne
 var db = mongoose.connection;
 db.on('error', function(error){
 	console.log(error)
-  console.log('Failed to connect to database....exiting...!\r\n');
+   nsole.log('Failed to connect to database....exiting...!\r\n');
   process.exit(-1);  
 });
 db.once('open', function(){

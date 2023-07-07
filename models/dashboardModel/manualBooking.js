@@ -46,7 +46,7 @@
         chooseServices: {
             type: String,
             trim: true,
-            required: [true, 'chooseServices is required']
+            required: [true, 'choose Services is required']
         },
         note: {
             type: String,

@@ -5,9 +5,8 @@ const mongoose = require('mongoose');
 const promoCode = require('../models/dashboardModel/promoCode');
 const techteam = require('../models/dashboardModel/techTeam');
 const manualBooking = require('../models/dashboardModel/manualBooking');
-const services = require('../models/dashboardModel/services');
+const services = require('../models/serviceModel');
 const banner = require('../models/dashboardModel/banner');
-const suplier = require('../models/dashboardModel/supplier');
 const supplier = require('../models/dashboardModel/supplier');
 
 //Add manualUser
@@ -429,31 +428,31 @@ module.exports.deleteManualBooking = async (req,res) => {
 }
 
 
-//addServices.................
-module.exports.addServices = async (req,res) => {
-    try {
-        const { title, description, sub_service,price,commision_margin,commision_amount,cost,icon,status} = req.body;
-        if(title && description  && sub_service && price && commision_margin && commision_amount && cost && icon  && status){
-        const ServicesInfo = new services({
-            title: title,
-            description: description,
-            sub_service:sub_service,
-            price:price,
-            commision_margin:commision_margin,
-            commision_amount:commision_amount,
-            cost:cost,
-            icon:icon,
-            status:status
-      })
-            await ServicesInfo.save()
-    res.send({ success: true, message: "Service Add Successfully", data: ServicesInfo })
-    }else{
-    res.send({ success: false, message: "All Fields Are Required", data: null })
-    }
-    } catch (err) {
-        res.send({ success: false, message: "Internal Server Error", data: null })
-    }
-}
+// //addServices.................
+// module.exports.addServices = async (req,res) => {
+//     try {
+//         const { title, description, sub_service,price,commision_margin,commision_amount,cost,icon,status} = req.body;
+//         if(title && description  && sub_service && price && commision_margin && commision_amount && cost && icon  && status){
+//         const ServicesInfo = new services({
+//             title: title,
+//             description: description,
+//             sub_service:sub_service,
+//             price:price,
+//             commision_margin:commision_margin,
+//             commision_amount:commision_amount,
+//             cost:cost,
+//             icon:icon,
+//             status:status
+//       })
+//             await ServicesInfo.save()
+//     res.send({ success: true, message: "Service Add Successfully", data: ServicesInfo })
+//     }else{
+//     res.send({ success: false, message: "All Fields Are Required", data: null })
+//     }
+//     } catch (err) {
+//         res.send({ success: false, message: "Internal Server Error", data: null })
+//     }
+// }
 
 //updatedServices.....................
 module.exports.updatedServices = async (req,res) => {
@@ -713,7 +712,7 @@ module.exports.addTechnician = async (req,res) => {
         if (dataInfo.length > 0) {
             res.send({ success: false, message: "Email Already Exists", data: null })
         } else {
-            const manualUser = new ManualUser({
+            const technicianData = new ManualUser({
                 name: name,
                 email: email,
                 password: password,
@@ -723,8 +722,8 @@ module.exports.addTechnician = async (req,res) => {
                 phone:phone,
                 user_type:"T"
             })
-            await manualUser.save()
-            res.send({ success: true, message: "Technician Add Successfully", data: manualUser })
+            await technicianData.save()
+            res.send({ success: true, message: "Technician Add Successfully", data: technicianData })
         }
     }else{
     res.send({ success: false, message: "All Fields Are Required", data: null })
@@ -739,7 +738,7 @@ module.exports.updateTechnician = async (req,res) => {
     try {
         const { name,phone, email, profile_photo,designation,skill,_id} = req.body;
         if(name && email && phone && skill && designation && profile_photo && _id){
-    const userData = await ManualUser.updateOne(
+    const technicianData = await ManualUser.updateOne(
         { _id: mongoose.Types.ObjectId(_id) },
         { $set: {
             name: name,
@@ -750,7 +749,7 @@ module.exports.updateTechnician = async (req,res) => {
             phone:phone,
             } }
       );
-      if(userData.modifiedCount === 1){
+      if(technicianData.modifiedCount === 1){
      res.send({ success: true, message: "Technician Updated Successfully", data: null })
       }else{
         res.send({ success: false, message: "Technician Don't Updated", data: null })
@@ -766,9 +765,9 @@ module.exports.updateTechnician = async (req,res) => {
 //getAllTechnician
 module.exports.getAllTechnician = async (req,res) => {
     try {
-    const userData = await ManualUser.find({user_type:"T"})
-    if(userData.length >0){
-        res.send({ success: true, message: "Get All Technician Successfully", data: userData })
+    const technicianData = await ManualUser.find({user_type:"T"})
+    if(technicianData.length >0){
+        res.send({ success: true, message: "Get All Technician Successfully", data: technicianData })
     }else{
         res.send({ success: true, message: "Not Found Technician", data: null })
     }
@@ -781,9 +780,9 @@ module.exports.getAllTechnician = async (req,res) => {
 module.exports.deleteTechnician= async (req,res) => {
     try {
         const{_id} =req.body;
-    const userData = await ManualUser.findOneAndDelete({_id:_id})
-    if(userData){
-        res.send({ success: true, message: "Technician Deleted Successfully", data: userData })
+    const technicianData = await ManualUser.findOneAndDelete({_id:_id})
+    if(technicianData){
+        res.send({ success: true, message: "Technician Deleted Successfully", data: technicianData })
     }else{
         res.send({ success: true, message: "Not Found Technician", data: null })
     }
@@ -795,11 +794,112 @@ module.exports.deleteTechnician= async (req,res) => {
 module.exports.getTechnicianById= async (req,res) => {
     try {
         const{_id} =req.body;
-    const userData = await ManualUser.findById({_id:_id})
-    if(userData){
-        res.send({ success: true, message: "Get Technician Details Successfully", data: userData })
+    const technicianData = await ManualUser.findById({_id:_id})
+    if(technicianData){
+        res.send({ success: true, message: "Get Technician Details Successfully", data: technicianData })
     }else{
         res.send({ success: true, message: "Not Found Technician", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getLeadById
+module.exports.getLeadById= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const leadData = await soucreLead.findById({_id:_id})
+    if(leadData){
+        res.send({ success: true, message: "Get SourceLead Details Successfully", data: leadData })
+    }else{
+        res.send({ success: true, message: "Not Found SourceLead", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//getbyIdPromocode...............
+module.exports.getPromocodeById= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const Data = await promoCode.findById({_id:_id})
+    if(Data){
+        res.send({ success: true, message: "Get promoCode Details Successfully", data: Data })
+    }else{
+        res.send({ success: true, message: "Not Found promoCode", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//getByIdTechTeam...........................
+module.exports.getTechTeamById= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const teamData = await techteam.findById({_id:_id})
+    if(teamData){
+        res.send({ success: true, message: "Get TechTeam Details Successfully", data: teamData })
+    }else{
+        res.send({ success: true, message: "Not Found TechTeam", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getByIdmanualbooking...........................
+module.exports.getyByIdManualbooking= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const bookingData = await manualBooking.findById({_id:_id})
+    if(bookingData){
+        res.send({ success: true, message: "Get manualbooking Details Successfully", data: bookingData })
+    }else{
+        res.send({ success: true, message: "Not Found manualbooking", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//getByidServices
+module.exports.getyByIdServices= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const servicesData = await services.findById({_id:_id})
+    if(servicesData){
+        res.send({ success: true, message: "Get Services Details Successfully", data: servicesData })
+    }else{
+        res.send({ success: true, message: "Not Found Services", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//getbyIdBybanner
+module.exports.getyByIdbanner= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const bannerData = await banner.findById({_id:_id})
+    if(bannerData){
+        res.send({ success: true, message: "Get Banner Details Successfully", data: bannerData })
+    }else{
+        res.send({ success: true, message: "Not Found Banner", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getbyIdSupplier
+module.exports.getyByIdSupplier= async (req,res) => {
+    try {
+        const{_id} =req.body;
+    const supplierData = await supplier.findById({_id:_id})
+    if(supplierData){
+        res.send({ success: true, message: "Get Supplier Details Successfully", data: supplierData })
+    }else{
+        res.send({ success: true, message: "Not Found Supplier", data: null })
     }
      } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })

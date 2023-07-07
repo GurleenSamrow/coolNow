@@ -6,7 +6,7 @@
             trim: true,
             required: [true, 'name is required'] 
         },
-        email: {
+        email: {  
             type: String,
             trim: true,
             lowercase: true,
@@ -106,20 +106,7 @@
         updated_date: { type: Date, default: Date.now }	
 
     });
-    // on every save, add the date
-    // userSchema.pre('save', function (next) {
-        // // get the current date
-        // var currentDate = new Date();
-
-        // // change the updated_at field to current date
-        // this.updated_at = currentDate;
-
-        // // if created_at doesn't exist, add to that field
-        // if (!this.created_at)
-            // this.created_at = currentDate;
-
-        // next();
-    // });
+   
     var User = mongoose.model('user', userSchema);
 	
     module.exports = User;

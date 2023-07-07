@@ -23,24 +23,28 @@ module.exports = function (app) {
     app.post('/updateLeadSource', dashboardController.updateLead);
     app.get('/GetAllLeadSource', dashboardController.getAllLead);
     app.post('/DeleteLeadSource', dashboardController.deleteLead);
+    app.get('/GetLeadSourceDetails', dashboardController.getLeadById);
 
     //PromoCode.....................................
     app.post('/addPromoCode', dashboardController.addCouponsPromoCode);
     app.post('/updatePromoCode', dashboardController.updateCouponsPromoCode);
     app.get('/GetAllPromoCode', dashboardController.getAllPromoCodeCoupon);
     app.post('/DeletePromoCode', dashboardController.deletePromoCodeCoupon);
+    app.get('/GetPromoCodeDetails', dashboardController.getPromocodeById);
 
     //techTeam...................................................
     app.post('/addTechTeam', dashboardController.addTechTeam);
     app.post('/updateTechTeam', dashboardController.updateTechTeam);
     app.get('/GetAllTechTeam', dashboardController.getAllTechTeam);
     app.post('/DeleteTechTeam', dashboardController.deleteTechTeam);
+    app.get('/GetTechTeamDetails', dashboardController.getTechTeamById);
 
     //AddManualBooking..................................
     app.post('/addManualBooking', dashboardController.manualBooking);
     app.post('/updateManualBooking', dashboardController.updatedManualBooking);
     app.get('/GetAllManualBooking', dashboardController.getAllManualBooking);
     app.post('/deleteManualBooking', dashboardController.deleteManualBooking);
+    app.get('/GetManualBookingDetails', dashboardController.getyByIdManualbooking);
 
 
 
@@ -49,6 +53,7 @@ module.exports = function (app) {
     app.post('/updateServices', dashboardController.updatedServices);
     app.get('/GetAllServices', dashboardController.getAllServices);
     app.post('/deleteServices', dashboardController.deleteServices);
+    app.get('/GetServicesDetails', dashboardController.getyByIdServices);
 
 
     //Banner..................................
@@ -56,6 +61,7 @@ module.exports = function (app) {
     app.post('/updatebanner', dashboardController.updatedBanner);
     app.get('/GetAllBanner', dashboardController.getAllBanner);
     app.post('/deleteBanner', dashboardController.deleteBanner);
+    app.get('/GetBannerDetails', dashboardController.getyByIdbanner);
 
 
     //supplier................................
@@ -63,6 +69,7 @@ module.exports = function (app) {
     app.post('/updateSupplier', dashboardController.updatedSupplier);
     app.get('/getAllSupplier', dashboardController.getAllSupplier);
     app.post('/deleteSupplier', dashboardController.deleteSupplier);
+    app.get('/GetSupplierDetails', dashboardController.getyByIdSupplier);
 
 
 
