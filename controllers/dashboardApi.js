@@ -8,6 +8,9 @@ const manualBooking = require('../models/dashboardModel/manualBooking');
 const services = require('../models/serviceModel');
 const banner = require('../models/dashboardModel/banner');
 const supplier = require('../models/dashboardModel/supplier');
+const skuModel = require('../models/dashboardModel/sku');
+const stockModel = require('../models/dashboardModel/stock');
+const stockOutModel = require('../models/stockOut');
 
 //Add manualUser
 module.exports.addManualUser = async (req,res) => {
@@ -902,6 +905,154 @@ module.exports.getyByIdSupplier= async (req,res) => {
         res.send({ success: true, message: "Not Found Supplier", data: null })
     }
      } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//Add Sku
+module.exports.addSku = async (req,res) => {
+    try {
+        const { skuNumber,name, supplier, category, description, cost, costwithgst} = req.body;
+        if(name && skuNumber && supplier && category && description && cost && costwithgst){
+            const sku = new skuModel({
+                name: name,
+                skuNumber: skuNumber,
+                supplier: supplier,
+                category: category,
+                description: description,
+                cost: cost,
+                costwithgst: costwithgst,
+            })
+            await sku.save()
+            res.send({ success: true, message: "Sku Add Successfully", data: sku })
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//updateSku
+module.exports.updatedSku = async (req,res) => {
+    try {
+        const { skuNumber,name, supplier, category, description, cost, costwithgst,_id} = req.body;
+        if(name && skuNumber && supplier && category && description && cost && costwithgst){
+            const skuData = await skuModel.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                { $set: {
+                name: name,
+                skuNumber: skuNumber,
+                supplier: supplier,
+                category: category,
+                description: description,
+                cost: cost,
+                costwithgst: costwithgst,
+                }
+      })
+      if(skuData.modifiedCount === 1){
+    res.send({ success: true, message: "Sku Updated Successfully", data: null })
+      }else{
+        res.send({ success: false, message: "Sku Don't Updated", data: null })
+      }
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getAllSku..................
+module.exports.getAllSku = async (req,res) => {
+    try {
+    const skuData = await skuModel.find()
+    if(skuData.length >0){
+        res.send({ success: true, message: "Get All Sku Successfully", data: skuData })
+    }else{
+        res.send({ success: true, message: "Not Found Sku", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//addStock...............................................
+module.exports.addStock = async (req,res) => {
+    try {
+        const { selectSku, selectQuantity, date} = req.body;
+        if(selectSku && selectQuantity && date){
+            const sku = new stockModel({
+                selectSku: selectSku,
+                selectQuantity: selectQuantity,
+                date: date,
+            })
+            await sku.save()
+            res.send({ success: true, message: "Stock Add Successfully", data: sku })
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//updateSku
+module.exports.updatedStock = async (req,res) => {
+    try {
+        const { selectSku, selectQuantity, date,_id} = req.body;
+        if(selectSku && selectQuantity && date,_id){
+            const Stock = await stockModel.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                { $set: {
+                    selectSku: selectSku,
+                    selectQuantity: selectQuantity,
+                    date: date,
+                }
+      })
+      if(Stock.modifiedCount === 1){
+    res.send({ success: true, message: "Stock Updated Successfully", data: null })
+      }else{
+        res.send({ success: false, message: "Stock Don't Updated", data: null })
+      }
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getAllStock..................
+module.exports. getAllStock = async (req,res) => {
+    try {
+    const stockData = await stockModel.find()
+    if(stockData.length >0){
+        res.send({ success: true, message: "Get All Stock Successfully", data: stockData })
+    }else{
+        res.send({ success: true, message: "Not Found Stock", data: null })
+    }
+     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//addStockout...............................................
+module.exports.addStockOut = async (req,res) => {
+    try {
+        const { jobOrder,receiverName,jobNature,issuedBy, totalMaterialCost} = req.body;
+        if(jobOrder && receiverName && jobNature && issuedBy && totalMaterialCost){
+            const skuOut = new stockOutModel({
+                jobOrder: jobOrder,
+                receiverName: receiverName,
+                jobNature: jobNature,
+                issuedBy:issuedBy,
+                totalMaterialCost:totalMaterialCost
+            })
+            await skuOut.save()
+            res.send({ success: true, message: "StockOut  Add Successfully", data: skuOut })
+    }else{
+    res.send({ success: false, message: "All Fields Are Required", data: null })
+    }
+    } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
 }

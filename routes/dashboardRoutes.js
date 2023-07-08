@@ -72,6 +72,19 @@ module.exports = function (app) {
     app.get('/GetSupplierDetails', dashboardController.getyByIdSupplier);
 
 
+    //sku
+    app.post('/addSku', dashboardController.addSku);
+    app.post('/updateSku', dashboardController.updatedSku);
+    app.get('/getAllSku', dashboardController.getAllSku);
+
+       //stock
+       app.post('/addStock', dashboardController.addStock);
+       app.post('/updateStock', dashboardController.updatedStock);
+       app.get('/getAllStock', dashboardController.getAllStock);
+
+       app.post('/addStockOut', dashboardController.addStockOut);
+
+
 
 
 };
