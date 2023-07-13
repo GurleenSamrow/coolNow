@@ -11,8 +11,8 @@ const async = require('async');
 const response = require('../services/response')
 
 const twilio = require('twilio');
-const accountSid = 'AC02ee55e6c916dd766ab994bd5190f4aa'; // Your Account SID from www.twilio.com/console
-const authToken = 'e5550526ab2c8fffbc9f8f019b335a36'; // Your Auth Token from www.twilio.com/console
+const accountSid = 'AC4cba3e5ee1ef9d47b9403c8cfc7587a2'; // Your Account SID from www.twilio.com/console
+const authToken = '4a53c503583dc9bad84b2314e967a5d9'; // Your Auth Token from www.twilio.com/console
 const isdCode = '+91';
 
 var Publishable_Key = 'pk_test_51KCNytSHANuRn5Nt1bcbIEAPkohyilUUOnVMrQrRO1tHmKPbmCR4LAMLC0T0TmB2HjbKLrTlPrHSYxVcZPfsSomU007x06PmbG'
@@ -369,8 +369,8 @@ module.exports = {
 				var client = new twilio(accountSid, authToken);
 				 client.messages.create({
 					body: `Please enter following OTP: ${otp} in the app to enter login.`,
-					to: isdCode + phone, // Text this number
-					from: '+12564498191' // From a valid Twilio number
+					to: "6563297257.", // Text this number
+					from: '+658533575' // From a valid Twilio number
 				})
 				.then((err, message) => {
 					if(err){

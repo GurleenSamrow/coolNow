@@ -16,7 +16,7 @@ const stockOutModel = require('../models/stockOut');
 module.exports.addManualUser = async (req,res) => {
     try {
         const { name,phone, email, gender, password, marketPlace, alias, leadSource, address, profile_photo } = req.body;
-        if(name && email && phone && gender && password && marketPlace && alias && leadSource && address && profile_photo){
+        if(name && email && phone && gender && password && marketPlace && alias && leadSource && address){
           const dataInfo = await ManualUser.find({ email: email })
         if (dataInfo.length > 0) {
             res.send({ success: false, message: "Email Already Exists", data: null })
@@ -271,14 +271,15 @@ module.exports.deletePromoCodeCoupon= async (req,res) => {
 //addTechTeam.................................
 module.exports.addTechTeam = async (req,res) => {
     try {
-        const { memberId, teamNme, Vehicle,selectZone,SelectPriority} = req.body;
-        if(memberId && teamNme  && Vehicle && selectZone && SelectPriority){
+        const { memberId, teamNme, Vehicle,selectZone,SelectPriority,days} = req.body;
+        if(memberId && teamNme  && Vehicle && selectZone && SelectPriority && days){
         const techInfo = new techteam({
             memberId: memberId,
             teamNme: teamNme,
             Vehicle: Vehicle,
             selectZone:selectZone,
             SelectPriority:SelectPriority,
+            days:days
       })
             await techInfo.save()
     res.send({ success: true, message: "Tech Team Add Successfully", data: techInfo })
@@ -292,8 +293,8 @@ module.exports.addTechTeam = async (req,res) => {
 //updatedCoupon
 module.exports.updateTechTeam = async (req,res) => {
     try {
-        const { memberId, teamNme, Vehicle,selectZone,SelectPriority,_id} = req.body;
-        if(memberId && teamNme  && Vehicle && selectZone && SelectPriority){
+        const { memberId, teamNme, Vehicle,selectZone,SelectPriority,_id,days} = req.body;
+        if(memberId && teamNme  && Vehicle && selectZone && SelectPriority,days){
     const techData = await techteam.updateOne(
         { _id: mongoose.Types.ObjectId(_id) },
         { $set: { 
@@ -302,6 +303,7 @@ module.exports.updateTechTeam = async (req,res) => {
             Vehicle: Vehicle,
             selectZone:selectZone,
             SelectPriority:SelectPriority,
+            days:days
         } }
       );
       if(techData.modifiedCount === 1){
@@ -320,11 +322,38 @@ module.exports.updateTechTeam = async (req,res) => {
 //list TechTeam.......................................
 module.exports.getAllTechTeam = async (req,res) => {
     try {
-    const techData = await techteam.find()
+    // const techData = await techteam.find()
+    const techData = await techteam.aggregate([
+        {
+          $match: {
+            _id: { $exists: true } // Optional: Add any additional match conditions here
+          }
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "memberId",
+            foreignField: "_id",
+            as: "datainfo"
+          }
+        },
+        {
+          $unwind: "$datainfo" 
+        },
+        {
+          $group: {
+            _id: "$_id",
+            teamNme: { $first: "$teamNme" },
+            days: { $first: "$days" },
+            Vehicle: { $first: "$Vehicle" },
+            datainfo: { $push: "$datainfo.name" }
+          }
+        }
+      ]);
     if(techData.length >0){
         res.send({ success: true, message: "Get All TechTeam Successfully", data: techData })
     }else{
-        res.send({ success: true, message: "Not Found TeachTeam", data: leadData })
+        res.send({ success: true, message: "Not Found TeachTeam", data: null })
     }
      } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })

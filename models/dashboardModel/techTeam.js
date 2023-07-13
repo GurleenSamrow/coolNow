@@ -11,6 +11,11 @@
             trim: true,
             required: [true, 'TeamName is required'] 
         },
+        days: {
+            type: Array,
+            trim: true,
+            required: [true, 'Days is required'] 
+        },
     
        Vehicle: {
             type: String,
