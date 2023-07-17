@@ -1818,7 +1818,7 @@ try{
 						return;
 					} else {
 						var Banner = helper.getModel("banner");  
-						Banner.find({active: true}).sort({_id: 1}).exec(function (bErr, bResults) {
+						Banner.find({status: true}).sort({_id: 1}).exec(function (bErr, bResults) {
 							if (err) {
 								res.json({
 									error: true,

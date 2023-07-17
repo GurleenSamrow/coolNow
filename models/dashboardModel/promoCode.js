@@ -38,9 +38,9 @@
             required: [true, 'endDate is required']
         },
         status: {
-            type: String,
-            trim: true,
-            required: [true, 'status is required']
+            type: Boolean,
+            required: true,
+            default: true
         },
         created_date: { type: Date, default: Date.now }	,
         updated_date: { type: Date, default: Date.now }	

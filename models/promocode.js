@@ -1,42 +1,52 @@
 (function(){
   var mongoose = require('mongoose');
-  var promocodeSchema = new mongoose.Schema({
-    code_name: {
-      type: String,
-      required: true
+  var promoSchema = new mongoose.Schema({
+
+    couponName: {
+        type: String,
+        trim: true,
+        required: [true, 'couponName is required']
     },
-	title: {
-      type: String,  
-      required: true 
+    code: {
+        type: String,
+        trim: true,
+        required: [true, 'code is required']
     },
-	description: {
-      type: String,  
-      required: false 
+    couponType: { 
+        type: String,
+        trim: true,
+        required: [true, 'couponType is required']
     },
-	discount_type: {
-      type: String,  // fixed, percentage
-      required: true 
+    discount: {
+        type: String,
+        trim: true,
+        required: [true, 'discount is required']
     },
-	discount_amount: {
-      type: Number,
-      required: true
+    amount: {
+        type: String,
+        trim: true,
+        required: [true, 'amount is required']
     },
-    valid_start_date: {
-      type: Date,
-      required: false
+    startDate: {
+        type: Date,
+        trim: true,
+        required: [true, 'startDate is required']
     },
-	valid_end_date: {
-      type: Date,
-      required: false
+    endDate: {
+        type: Date,
+        trim: true,
+        required: [true, 'endDate is required']
     },
-    active:{
-      type: Boolean,
-      required: true,
-	  default: true
+    status: {
+        type: Boolean,
+        required: true,
+        default: true
     },
-    created_at: { type: Date, default: Date.now }
-  });
+    created_date: { type: Date, default: Date.now }	,
+    updated_date: { type: Date, default: Date.now }	
+
+});
   
-  var Promocode = mongoose.model('promocode', promocodeSchema);
+  var Promocode = mongoose.model('promocode', promoSchema);
   module.exports = Promocode;
 })();
