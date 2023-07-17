@@ -2,7 +2,6 @@ const ManualUser = require('../models/user')
 const soucreLead = require('../models/dashboardModel/leadSource')
 const PromoCode = require('../models/promocode')
 const mongoose = require('mongoose');
-//const promoCode = require('../models/dashboardModel/promoCode');
 const techteam = require('../models/dashboardModel/techTeam');
 const manualBooking = require('../models/dashboardModel/manualBooking');
 const services = require('../models/serviceModel');
