@@ -81,8 +81,15 @@ module.exports = function (app) {
        app.post('/addStock', dashboardController.addStock);
        app.post('/updateStock', dashboardController.updatedStock);
        app.get('/getAllStock', dashboardController.getAllStock);
-
        app.post('/addStockOut', dashboardController.addStockOut);
+
+    //   vehicle....
+    app.post('/addVehicle', dashboardController.addvehicle);
+    app.post('/updateVehicle', dashboardController.updatedVehicle);
+    app.post('/DeleteVehicle', dashboardController.deleteVehicle);
+    app.get('/getAllVehicle', dashboardController.getAllVehicle);
+    app.get('/GetVehicleDetails', dashboardController.getyByIdVehicle);
+
 
 
 
