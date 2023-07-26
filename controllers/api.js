@@ -9,6 +9,7 @@ var fs = require('fs');
 var path 	 = require('path');
 const async = require('async');
 const response = require('../services/response')
+const services = require('../models/dashboardModel/services');
 
 const twilio = require('twilio');
 const accountSid = 'AC4cba3e5ee1ef9d47b9403c8cfc7587a2'; // Your Account SID from www.twilio.com/console
@@ -1774,7 +1775,7 @@ try{
 		})
     },
 	
-	userHomePage: function (req, res, next) { //console.log("userHomePage");
+	userHomePage: async function  (req, res, next) { //console.log("userHomePage");
 	try{	//console.log(req.params)
         var userId = mongoose.Types.ObjectId(req.params.id);
 		if (!userId) {
@@ -1787,7 +1788,7 @@ try{
         }
 		
 		var currentDate = moment().utcOffset(CommonHelper.getSettlementTZMins(timezone)).format('YYYY-MM-DD')
-		
+		var serviceInfo = await services.find()
         var User = helper.getModel("user");  
         User.findOne({_id: userId, is_deleted: {'$ne': true}}).sort({_id: 1}).exec(function (err, results) {
             if (err) {
@@ -1806,6 +1807,7 @@ try{
 				userInfo.track_aircon = results.track_aircon;
 				
 				var Promocode = helper.getModel("promocode");  
+
 				Promocode.find({active: true, valid_start_date: {'$lte': new Date(currentDate)}, valid_end_date: {'$gte': new Date(currentDate)}}).sort({_id: 1}).exec(function (oErr, oResults) {
 					if (err) {
 						res.json({
@@ -1836,6 +1838,7 @@ try{
 									userInfo: userInfo,
 									offers: oResults,
 									banners: bResults,
+									services:serviceInfo,
 									bannerImgUrl: SITE_PATH + "uploads/banner/"
 								});
 								res.end();
@@ -2972,15 +2975,15 @@ try{
 						error: false,
 						message: "Success",
 						responseCode: 1,
-						today_bookings: [],
+						today_bookings: 0,
 						payments:{
 							'incompleted_count':0,
 							'incompleted_amount':0,
 							'cash':0
 						},
 						timeonjob:{
-							'ongoing_job':'',
-							'duration': '',
+							'ongoing_job':0,
+							'duration': 0,
 							'pending_job':0
 						},
 						kpitracker:{
