@@ -77,11 +77,11 @@ module.exports = function (app) {
     app.post('/updateSku', dashboardController.updatedSku);
     app.get('/getAllSku', dashboardController.getAllSku);
 
-       //stock
-       app.post('/addStock', dashboardController.addStock);
-       app.post('/updateStock', dashboardController.updatedStock);
-       app.get('/getAllStock', dashboardController.getAllStock);
-       app.post('/addStockOut', dashboardController.addStockOut);
+    //stock
+    app.post('/addStock', dashboardController.addStock);
+    app.post('/updateStock', dashboardController.updatedStock);
+    app.get('/getAllStock', dashboardController.getAllStock);
+    app.post('/addStockOut', dashboardController.addStockOut);
 
     //   vehicle....
     app.post('/addVehicle', dashboardController.addvehicle);
@@ -90,8 +90,20 @@ module.exports = function (app) {
     app.get('/getAllVehicle', dashboardController.getAllVehicle);
     app.get('/GetVehicleDetails', dashboardController.getyByIdVehicle);
 
+    //   Priorities....
+    app.get('/priorities', dashboardController.getAllPriorities);
+    app.post('/priorities', dashboardController.addPriorities);
+    app.put('/priorities/:_id', dashboardController.updatedPriorities);
+    app.delete('/priorities/:_id', dashboardController.deletePriorities);
 
+    //   Zones....
+    app.get('/zones', dashboardController.getAllZones);
+    app.post('/zones', dashboardController.addZones);
+    app.put('/zones/:_id', dashboardController.updatedZones);
+    app.delete('/zones/:_id', dashboardController.deleteZones);
 
-
-
+     //   Districts....
+     app.get('/districts', dashboardController.getAllDistricts);
+     app.post('/districts', dashboardController.addDistricts);
+  
 };
