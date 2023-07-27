@@ -11,6 +11,9 @@ const skuModel = require('../models/dashboardModel/sku');
 const stockModel = require('../models/dashboardModel/stock');
 const stockOutModel = require('../models/stockOut');
 const vehicleModel = require('../models/dashboardModel/vehicleModel');
+const priorityModel = require('../models/dashboardModel/priorityModel');
+const zoneModel = require('../models/dashboardModel/zoneModel');
+const districtModel = require('../models/dashboardModel/districtModel');
 
 //Add manualUser
 module.exports.addManualUser = async (req, res) => {
@@ -1190,6 +1193,192 @@ module.exports.getyByIdVehicle = async (req, res) => {
             res.send({ success: true, message: "Get Vehicle Details Successfully", data: VehicleData })
         } else {
             res.send({ success: true, message: "Not Found Vehicle", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getAllPriorities
+module.exports.getAllPriorities = async (req, res) => {
+    try {
+        const data = await priorityModel.find()
+        if (data.length > 0) {
+            res.send({ success: true, message: "Get All Priorities Successfully", data: data })
+        } else {
+            res.send({ success: true, message: "Not Found Priorities", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//addPriorities...............................................
+module.exports.addPriorities = async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (name) {
+            const priority = new priorityModel({
+                name: name,
+            })
+            await priority.save()
+            res.send({ success: true, message: "Priority Added Successfully", data: priority })
+        } else {
+            res.send({ success: false, message: "Name is Required", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+// updatedPriorities......................
+module.exports.updatedPriorities = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const { name } = req.body;
+        if (name) {
+            const priorityUpdate = await priorityModel.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                {
+                    $set: {
+                        name: name
+                    }
+                }
+            )
+            if (priorityUpdate.modifiedCount === 1) {
+                res.send({ success: true, message: "Priority Updated Successfully", data: null })
+            } else {
+                res.send({ success: false, message: "Priority Don't Updated", data: null })
+            }
+        } else {
+            res.send({ success: false, message: "Name is Required", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//deletePriorities
+module.exports.deletePriorities = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const deleteData = await priorityModel.findByIdAndDelete(_id)
+        if (deleteData) {
+            res.send({ success: true, message: "Priority Deleted Successfully", data: deleteData })
+        } else {
+            res.send({ success: false, message: "Priority Don't Deleted", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getAllZones
+module.exports.getAllZones = async (req, res) => {
+    try {
+        const data = await zoneModel.find()
+        if (data.length > 0) {
+            res.send({ success: true, message: "Get All Zones Successfully", data: data })
+        } else {
+            res.send({ success: true, message: "Not Found Zones", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//addZones...............................................
+module.exports.addZones = async (req, res) => {
+    try {
+        const { name, zoneId, district } = req.body;
+        if (name && zoneId && district) {
+            const zone = new zoneModel({
+                name: name,
+                zoneId: zoneId,
+                district:  district 
+            })
+            await zone.save()
+            res.send({ success: true, message: "Zone Added Successfully", data: zone })
+        } else {
+            res.send({ success: false, message: "All Fields Are Required", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+// updatedZones......................
+module.exports.updatedZones = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const { name, zoneId, district } = req.body;
+        if (name && zoneId && district) {
+            const zoneUpdate = await zoneModel.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                {
+                    $set: {
+                        name: name,
+                        zoneId: zoneId,
+                        district:  district 
+                    }
+                }
+            )
+            if (zoneUpdate.modifiedCount === 1) {
+                res.send({ success: true, message: "Zone Updated Successfully", data: null })
+            } else {
+                res.send({ success: false, message: "Zone Don't Updated", data: null })
+            }
+        } else {
+            res.send({ success: false, message: "All Fields Are Required", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//deleteZones
+module.exports.deleteZones = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const deleteData = await zoneModel.findByIdAndDelete(_id)
+        if (deleteData) {
+            res.send({ success: true, message: "Zone Deleted Successfully", data: deleteData })
+        } else {
+            res.send({ success: false, message: "Zone Don't Deleted", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getAllZones
+module.exports.getAllDistricts = async (req, res) => {
+    try {
+        const data = await districtModel.find()
+        if (data.length > 0) {
+            res.send({ success: true, message: "Get All Districts Successfully", data: data })
+        } else {
+            res.send({ success: true, message: "Not Found Districts", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//addZones...............................................
+module.exports.addDistricts = async (req, res) => {
+    try {
+        const { postal_district, postal_sectors, locations } = req.body;
+        if (postal_district && postal_sectors && locations) {
+            const district = new districtModel({
+                postal_district: postal_district,
+                postal_sectors: postal_sectors,
+                locations:  locations 
+            })
+            await district.save()
+            res.send({ success: true, message: "Zone Added Successfully", data: district })
+        } else {
+            res.send({ success: false, message: "All Fields Are Required", data: null })
         }
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })

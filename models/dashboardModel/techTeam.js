@@ -5,7 +5,7 @@
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user',
             required: [true, ' memberId is required'] 
-    }],
+        }],
         teamNme: {
             type: String,
             trim: true,
@@ -16,23 +16,22 @@
             trim: true,
             required: [true, 'Days is required'] 
         },
-    
-       Vehicle: {
+
+        Vehicle: {
             type: String,
             trim: true,
             required: [true, 'Vehicle is required']
-			
         },
         selectZone: {
             type: Array,
             trim: true,
             required: [true, 'selectZone is required']
-            },
+        },
         SelectPriority: {
-                type: Array,
-                trim: true,
-                required: [true, 'SelectPriority is required']
-                },
+            type: Array,
+            trim: true,
+            required: [true, 'SelectPriority is required']
+        },
         created_date: { type: Date, default: Date.now }	,
         updated_date: { type: Date, default: Date.now }	
 
