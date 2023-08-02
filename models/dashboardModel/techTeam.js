@@ -28,8 +28,8 @@
             required: [true, 'selectZone is required']
         },
         SelectPriority: {
-            type: Array,
-            trim: true,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'priority',
             required: [true, 'SelectPriority is required']
         },
         created_date: { type: Date, default: Date.now }	,

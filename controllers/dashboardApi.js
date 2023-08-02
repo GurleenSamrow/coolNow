@@ -14,6 +14,74 @@ const vehicleModel = require('../models/dashboardModel/vehicleModel');
 const priorityModel = require('../models/dashboardModel/priorityModel');
 const zoneModel = require('../models/dashboardModel/zoneModel');
 const districtModel = require('../models/dashboardModel/districtModel');
+const appointmentModel = require('../models/appointment');
+var helper = require('../helper.js');
+var moment = require('../node_modules/moment');
+
+const getAvailableTeam =  async (location, startTime, endTime) => {
+   
+    if(location.district){
+
+        //Find district id..
+        var districts = await districtModel.findOne({
+            locations: location.district
+        });
+
+        if(districts._id){
+            //find zones..
+            var zones = await zoneModel.find({
+                district: districts.id 
+            });
+
+            //find teams with slected zones..
+            var zoneIds = zones.map((zone, index) => {
+                return zone.id;
+            })
+             
+            //Find teams working zone...
+            if(zoneIds.length > 0){
+                var techteams = await techteam.find({
+                    selectZone: {
+                        $in:  zoneIds
+                    } 
+                }).sort({ SelectPriority: 1 })
+
+                if(techteams.length > 0){
+                    var foundTeam = null;
+                    for (const team of techteams) {
+                        //Find team availibality in selected slot...
+                        if(!foundTeam){
+                            var is_exists = await appointmentModel.find({
+                                team_id: team._id
+                            })
+                            if(is_exists.length == 0){
+                                foundTeam = team; 
+                            }
+                        }
+                    }
+
+                    if(foundTeam && foundTeam._id){
+                        return {
+                            success: true,
+                            team_id: foundTeam._id
+                        } 
+                    }
+                }
+
+                return {
+                    success: false,
+                    message: "No team(s) available at the moment!"
+                }
+            }
+        }
+    }
+
+    return {
+        success: false,
+        message: "Please select location district"
+    }
+        
+}
 
 //Add manualUser
 module.exports.addManualUser = async (req, res) => {
@@ -361,6 +429,8 @@ module.exports.getAllTechTeam = async (req, res) => {
                     teamNme: { $first: "$teamNme" },
                     days: { $first: "$days" },
                     Vehicle: { $first: "$Vehicle" },
+                    selectZone: { $first: "$selectZone" },
+                    SelectPriority: { $first: "$SelectPriority" },
                     datainfo: { $push: "$datainfo.name" }
                 }
             }
@@ -1382,5 +1452,171 @@ module.exports.addDistricts = async (req, res) => {
         }
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//Appointments...............................................
+module.exports.userAppointments = async (req, res) => {
+    try {
+        const { body } = req;
+       
+        var userId = mongoose.Types.ObjectId(body.user_id) || "";
+		var userName = (body.user_name) ? body.user_name : "";
+  		var selectedService = ((body.selected_service).length > 0) ? body.selected_service : [];
+		var date = (body.date) ? body.date : "";
+		var timeSlots = (body.time_slot) ? body.time_slot : "";
+		var location =  (body.location) ? body.location : ""; 
+		var latitude = (body.latitude) ? body.latitude : "";
+		var longitude = (body.longitude) ? body.longitude : "";
+		var promoCode = (body.promo_code) ? body.promo_code : "";
+		var discountType = (body.discount_type) ? parseInt(body.discount_type) : "";
+		var promoDiscount = (body.promo_discount) ? parseInt(body.promo_discount) : 0;
+		var tip = (body.tip) ? parseInt(body.tip) : 0;
+ 		var serviceCharge = (body.service_charge) ? parseInt(body.service_charge) : 0;
+		var tax = (body.tax) ? parseInt(body.tax) : 0;
+       
+        if(!userId || !userName || (selectedService.length == 0) || !date || !timeSlots  || !location || !latitude || !longitude){
+            res.json({
+                error: true,
+                message: "Required parameters missing!"
+            });
+            res.end();
+            return;
+        }
+
+        var pItems = [];
+		var bookingTotal = 0; 
+		var bTAfterDiscount = 0;
+		var totalDiscount = 0;
+		var tPAmount = 0;
+		var timeTotal = 0; 
+ 
+        var startTimeString = date+" "+timeSlots.start_time_slot+":00";
+        var startTimeFormat = moment(startTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+        var endTimeString = date+" "+timeSlots.end_time_slot+":00";
+        var endTimeFormat = moment(endTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]')
+
+        //Get available team..
+        var teamId = await getAvailableTeam(location, startTimeFormat, endTimeFormat);
+         
+
+        selectedService.forEach(function (service, index) {
+            
+			var pData = {};
+			pData.item_uniq_id = helper.getUniqueItemId();
+			pData.service_id = mongoose.Types.ObjectId(service.id);
+			pData.service_name = service.name;
+			pData.service_duration = service.duration;
+			pData.service_amount = service.amount;
+			pData.booking_units = service.units;
+			pData.total_booking_amount = (service.amount*service.units);
+			pData.image = (service.image) ? service.image : "";
+			pData.video = (service.video) ? service.video : "";
+			pData.comment = (service.comment) ? service.comment : "";
+			pData.service_confirmation = true;
+			
+			bookingTotal += (pData.service_amount*pData.booking_units);
+			timeTotal += parseInt(service.duration);
+			pItems.push(pData);
+		})
+
+        if(pItems.length > 0){
+
+            if(discountType == 'percentage'){
+                totalDiscount = (bookingTotal*promoDiscount/100);
+            } else {
+                totalDiscount = promoDiscount;
+            }
+            
+            bTAfterDiscount = (bookingTotal-totalDiscount);
+            tPAmount = (bTAfterDiscount+tip+tax+serviceCharge)
+             
+            var posted_booking = {
+                "user_id": userId,
+                "user_name": userName,
+                "team_id": teamId,
+                "user_latitude": latitude,
+                "user_longitude": longitude,
+                "total": bookingTotal,
+                "promo_code": promoCode,
+                "discount": promoDiscount,
+                "discount_type":discountType,
+                "discount_amount":totalDiscount,
+                "total_after_discount": bTAfterDiscount,
+                "delivery_location": location,
+                "tip_amount": tip,
+                "tax": tax,
+                "start_time" : new Date(startTimeFormat),
+                "end_time" : new Date(endTimeFormat),
+                "service_charge": serviceCharge,
+                "total_payable_amount": tPAmount,
+                "total_time_duration": timeTotal,
+                "amount_paid": {
+                    "total_paid" : 0,
+                    "cash"   : 0,
+                    "online" : 0
+                },
+                "payment_status" : "pending",
+                "payment_mode" : "cash",
+                "status" : "pending",
+                "items": pItems
+            };
+
+            //add new Booking
+            var Booking = helper.getModel("appointment");
+            var newBooking = new Booking(posted_booking);
+            newBooking.save(function (err, dbres) {
+                if (err) {
+                    res.json({
+                        error: true,
+                        message: "Something went wrong to save data in booking.",
+                        mongoose_error: JSON.stringify(err),
+                        responseCode: 0
+                    });
+                    res.end();
+                    return;
+                } else {
+                    //console.log("dbres._id-", dbres._id);
+                    if (dbres && dbres._id) {
+                        
+                        res.json({
+                            error: false,
+                            message: 'Booking Success!',
+                            results: dbres,
+                            responseCode: 1
+                        });
+                        res.end();
+                        return;
+                    } else {
+                        res.json({
+                            error: true,
+                            message: "Something went wrong to save data in booking.",
+                            mongoose_error: JSON.stringify(err),
+                            responseCode: 0
+                        });
+                        res.end();
+                        return;
+                    }
+                }
+            })
+			 
+        }else{
+            res.json({
+                error: true,
+                message: "Something went wrong to save data in booking.",
+                responseCode: 0
+            });
+            res.end();
+            return;
+        }
+
+    } catch (err) {
+        res.json({
+            error: true,
+            message: "Internal Server Error!",
+            mongoose_error: JSON.stringify(err)
+        });
+        res.end();
+        return;
     }
 }
