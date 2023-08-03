@@ -102,8 +102,11 @@ module.exports = function (app) {
     app.put('/zones/:_id', dashboardController.updatedZones);
     app.delete('/zones/:_id', dashboardController.deleteZones);
 
-     //   Districts....
-     app.get('/districts', dashboardController.getAllDistricts);
-     app.post('/districts', dashboardController.addDistricts);
+    //   Districts....
+    app.get('/districts', dashboardController.getAllDistricts);
+    app.post('/districts', dashboardController.addDistricts);
   
+    // Appointments...
+    app.post('/appointments', dashboardController.userAppointments);
+
 };
