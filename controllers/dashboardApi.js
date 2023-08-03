@@ -52,7 +52,31 @@ const getAvailableTeam =  async (location, startTime, endTime) => {
                         //Find team availibality in selected slot...
                         if(!foundTeam){
                             var is_exists = await appointmentModel.find({
-                                team_id: team._id
+                                team_id: team._id,
+                                $or: [
+                                    { $and : [ 
+                                        {
+                                            "start_time": {
+                                                $lte: new Date(startTime)
+                                            }
+                                        }, {
+                                            "end_time": {
+                                                $gte: new Date(startTime)
+                                            }
+                                        }
+                                    ]},
+                                    { $and : [
+                                        {
+                                            "start_time": {
+                                                $lte: new Date(endTime)
+                                            }
+                                        }, {
+                                            "end_time": {
+                                                $gte: new Date(endTime)
+                                            }
+                                        }
+                                    ]}   
+                                ]
                             })
                             if(is_exists.length == 0){
                                 foundTeam = team; 
@@ -1498,7 +1522,16 @@ module.exports.userAppointments = async (req, res) => {
 
         //Get available team..
         var teamId = await getAvailableTeam(location, startTimeFormat, endTimeFormat);
-         
+        if(teamId.success && teamId.team_id){
+            teamId = teamId.team_id;
+        }else{
+            res.json({
+                error: true,
+                message: teamId.message
+            });
+            res.end();
+            return;
+        }
 
         selectedService.forEach(function (service, index) {
             
