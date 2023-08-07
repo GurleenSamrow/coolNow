@@ -38,6 +38,9 @@ module.exports = function(app) {
 	
 	app.get('/servicelist',require('../controllers/api').getServiceList);
 	app.get('/packagelist',require('../controllers/api').getPackageList);
+//NewRoutes
+	app.post('/userServices',require('../controllers/api').selectServices);
+	app.delete('/userDeleteServices',require('../controllers/api').deleteServices);
 	
 
-};
+}; 

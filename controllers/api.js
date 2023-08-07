@@ -1,4 +1,5 @@
 var mongoose = require('../node_modules/mongoose');
+const userServices = require("../models/userServicesModel.js");
 var Config = require('../config/config');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
@@ -22,6 +23,8 @@ var Secret_Key = 'sk_test_51KCNytSHANuRn5NtJMU88p7xldot4XYa8DW3IpYQBkYT41uKtF0s5
 var User = helper.getModel('user');
 
 var timezone = "08:00"  // UTC +8:00 or GMT +8:00;
+
+
 
 
 function getTimezoneName() {
@@ -3829,3 +3832,39 @@ try{
 			}
 		})  
 	};
+
+	//selectServicesByUsers.............................
+	module.exports.selectServices = async (req, res) => {
+		try {
+			const { servicesId, numberOfunits, video,image,comments } = req.body;
+			if (servicesId && numberOfunits) {
+				const servicesUser = new userServices({
+					servicesId: servicesId,
+					numberOfunits: numberOfunits,
+					video:video,
+					image:  image ,
+					comments:comments
+				})
+				await servicesUser.save()
+				res.send({ success: true, message: "User Services Added Successfully", data: servicesUser })
+			} else {
+				res.send({ success: false, message: "ServicesId And NumberOfunits Fields Are Required", data: null })
+			}
+		} catch (err) {
+			res.send({ success: false, message: "Internal Server Error", data: null })
+		}
+	}
+	//deleteServicesByid.............................
+	module.exports.deleteServices = async (req, res) => {
+		try {
+			const { _id } = req.body;
+			const deleteData = await userServices.findOneAndDelete({ id: _id })
+			if (deleteData) {
+				res.send({ success: true, message: "Services Delete Successfully", data: deleteData })
+			} else {
+				res.send({ success: false, message: "Services Does'nt Delete", data: null })
+			}
+		} catch (err) {
+			res.send({ success: false, message: "Internal Server Error", data: null })
+		}
+	}
