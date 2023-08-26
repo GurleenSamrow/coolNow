@@ -1667,7 +1667,7 @@ module.exports.addPackage = async (req, res) => {
                 items:items,
             })
             await vehicle.save()
-            res.status(201).send({ success: true, message: "Vehicle Add Successfully", data: vehicle })
+            res.status(201).send({ success: true, message: "Pacakage Added Successfully", data: vehicle })
         } else {
             res.status(400).send({ success: false, message: "All Fields Are Required", data: null })
         }
