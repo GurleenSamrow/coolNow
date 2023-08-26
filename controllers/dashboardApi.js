@@ -15,6 +15,7 @@ const priorityModel = require('../models/dashboardModel/priorityModel');
 const zoneModel = require('../models/dashboardModel/zoneModel');
 const districtModel = require('../models/dashboardModel/districtModel');
 const appointmentModel = require('../models/appointment');
+const package = require('../models/package');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
 
@@ -726,12 +727,12 @@ module.exports.addServices = async (req, res) => {
                 status: status
             })
             await ServicesInfo.save()
-            res.send({ success: true, message: "Service Add Successfully", data: ServicesInfo })
+            res.status(201).send({ success: true, message: "Service Add Successfully", data: ServicesInfo })
         } else {
-            res.send({ success: false, message: "All Fields Are Required", data: null })
+            res.status(400).send({ success: false, message: "All Fields Are Required", data: null })
         }
     } catch (err) {
-        res.send({ success: false, message: "Internal Server Error", data: null })
+        res.status(500).send({ success: false, message: "Internal Server Error", data: null })
     }
 }
 
@@ -1651,5 +1652,100 @@ module.exports.userAppointments = async (req, res) => {
         });
         res.end();
         return;
+    }
+}
+
+//addpackage
+module.exports.addPackage = async (req, res) => {
+    try {
+        const { package_name, description, package_price,items } = req.body;
+        if (package_name && description && package_price && items ) {
+            const vehicle = new package({
+                package_name: package_name,
+                description: description,
+                package_price: package_price,
+                items:items,
+            })
+            await vehicle.save()
+            res.status(201).send({ success: true, message: "Vehicle Add Successfully", data: vehicle })
+        } else {
+            res.status(400).send({ success: false, message: "All Fields Are Required", data: null })
+        }
+    } catch (err) {
+        res.status(400).send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//updatePackage
+module.exports.updatedPackage = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const { package_name, description, package_price,items } = req.body;
+        if (package_name && description && package_price && items )  {
+            const pacakageUpdate = await package.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                {
+                    $set: {
+                        package_name: package_name,
+                        description: description,
+                        package_price: package_price,
+                        items:items,
+                    }
+                }
+            )
+            if (pacakageUpdate.modifiedCount === 1) {
+                res.send({ success: true, message: "Pacakage Updated Successfully", data: null })
+            } else {
+                res.send({ success: false, message: "Pacakage Does't Updated", data: null })
+            }
+        } else {
+            res.send({ success: false, message: "All Fields Are Required", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getAllPackage
+module.exports.getAllPackage = async (req, res) => {
+    try {
+        const data = await package.find()
+        if (data.length > 0) {
+            res.send({ success: true, message: "Get All Package Successfully", data: data })
+        } else {
+            res.send({ success: true, message: "Not Found Package", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getAllPackage
+module.exports.getPackageById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const data = await package.find({_id:id})
+        if (data.length > 0) {
+            res.send({ success: true, message: "Get Package Details Successfully", data: data })
+        } else {
+            res.send({ success: true, message: "Not Found Package", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//deletepackage
+module.exports.deletePackage = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const deleteData = await package.findByIdAndDelete({_id:_id})
+        if (deleteData) {
+            res.send({ success: true, message: "Package Deleted Successfully", data: deleteData })
+        } else {
+            res.send({ success: false, message: "Package Does't Deleted", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
     }
 }
