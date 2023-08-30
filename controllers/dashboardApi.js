@@ -19,6 +19,7 @@ const package = require('../models/package');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
 
+
 const getAvailableTeam =  async (location, startTime, endTime) => {
    
     if(location.district){
@@ -1723,8 +1724,8 @@ module.exports.getAllPackage = async (req, res) => {
 //getAllPackage
 module.exports.getPackageById = async (req, res) => {
     try {
-        const { id } = req.params;
-        const data = await package.find({_id:id})
+        const { _id } = req.params;
+        const data = await package.find({_id:_id})
         if (data.length > 0) {
             res.send({ success: true, message: "Get Package Details Successfully", data: data })
         } else {
@@ -1744,6 +1745,48 @@ module.exports.deletePackage = async (req, res) => {
             res.send({ success: true, message: "Package Deleted Successfully", data: deleteData })
         } else {
             res.send({ success: false, message: "Package Does't Deleted", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+
+//updateBookingstatus
+module.exports. updatedBookingStatus = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const { status } = req.body;
+        if (status) {
+            const statusUpdate = await appointmentModel.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                {
+                    $set: {
+                        status: status
+                    }
+                }
+            )
+            if (statusUpdate.modifiedCount === 1) {
+                res.send({ success: true, message: "Booking Status Updated Successfully", data: null })
+            } else {
+                res.send({ success: false, message: "Booking Status Does't Updated", data: null })
+            }
+        } else {
+            res.send({ success: false, message: "Status is Required", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+//bookingetails..
+module.exports.bookingDetails = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const data = await appointmentModel.find({_id: _id})
+        if (data.length > 0) {
+            res.send({ success: true, message: "Get Booking Details Successfully", data: data })
+        } else {
+            res.send({ success: true, message: "Not Found Booking Details", data: null })
         }
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })

@@ -41,6 +41,8 @@ module.exports = function(app) {
 //NewRoutes
 	app.post('/userServices',require('../controllers/api').selectServices);
 	app.delete('/userDeleteServices',require('../controllers/api').deleteServices);
+	app.post('/addRatting',require('../controllers/api').addRatting);
+	app.get('/technicianHomepage/:userId',require('../controllers/api').homepageDetails);
 	
 
 }; 

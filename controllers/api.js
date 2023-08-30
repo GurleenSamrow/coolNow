@@ -11,6 +11,8 @@ var path 	 = require('path');
 const async = require('async');
 const response = require('../services/response')
 const services = require('../models/dashboardModel/services');
+const ratting = require('../models/ratingModel');
+const appointmentModel = require('../models/appointment')
 
 const twilio = require('twilio');
 const accountSid = 'AC4cba3e5ee1ef9d47b9403c8cfc7587a2'; // Your Account SID from www.twilio.com/console
@@ -3868,3 +3870,63 @@ try{
 			res.send({ success: false, message: "Internal Server Error", data: null })
 		}
 	}
+
+
+	//addRatting.....
+	module.exports.addRatting = async (req, res) => {
+		try {
+			const { userId, technicianId, value } = req.body;
+			if (userId && technicianId && value) {
+				const servicesUser = new ratting({
+					userId: userId,
+					technicianId: technicianId,
+					value:value,
+				})
+				await servicesUser.save()
+				res.send({ success: true, message: "Ratting Added Successfully", data: servicesUser })
+			} else {
+				res.send({ success: false, message: "All Fields Are Required", data: null })
+			}
+		} catch (err) {
+			res.send({ success: false, message: "Internal Server Error", data: null })
+		}
+	}
+
+	//homepage
+module.exports.homepageDetails = async (req, res) => {
+    try {
+        const currentDate = new Date();
+        const startOfDay = new Date(currentDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(currentDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        const { userId } = req.params;
+		const userData= await appointmentModel.find({user_id: userId })
+		if(userData.length > 0){
+        const cancelBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "cancelled" }] })
+		const pendingBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "pending" }] })
+	    const completedBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "completed" }] })
+        const todayBooking = await appointmentModel.find({ $and:[{ user_id: userId},{created_at: {$gte: startOfDay,$lte: endOfDay}}]})
+		const performance = await ratting.find({ user_id: userId})
+       const data ={
+		totalTodayJobs:todayBooking.length,
+		totalCancelJobs:cancelBooking.length,
+		totalPendingJobs:pendingBooking.length,
+		totalCompletedJobs:completedBooking.length,
+		totalPerformance:performance[0].value,
+		payment:"00",
+		todayBooking:todayBooking,
+		pendingBooking:pendingBooking,
+		cancelBooking:cancelBooking,
+		completedBooking:completedBooking
+	
+	   }
+	res.send({ success: true, message: "Data Found successfully", data: data })
+	}else{
+		res.send({ success: false, message: "User Not Found", data: null })
+	}
+		
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
