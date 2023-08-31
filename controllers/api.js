@@ -3891,6 +3891,20 @@ try{
 			res.send({ success: false, message: "Internal Server Error", data: null })
 		}
 	}
+	//getrattingByuser
+	module.exports.getRatting = async (req, res) => {
+		try {
+			const { technicianId } = req.params;
+			const data = await ratting.find({technicianId:technicianId})
+			if (data.length > 0) {
+				res.send({ success: true, message: "Get Ratting  Successfully", data: data })
+			} else {
+				res.send({ success: true, message: "Not Found Ratting", data: null })
+			}
+		} catch (err) {
+			res.send({ success: false, message: "Internal Server Error", data: null })
+		}
+	}
 
 	//homepage
 module.exports.homepageDetails = async (req, res) => {
@@ -3929,4 +3943,54 @@ module.exports.homepageDetails = async (req, res) => {
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
+}
+
+
+
+//userSignup
+module.exports.SignupUserSendOtp=(req, res)=>{  
+	try{ 
+	console.log(req.body)
+	var phone = req.body.phone || ''; 
+	if(!phone) {
+		res.json({
+			error: true,
+			message: "phone parameters missing!",
+			responseCode: 0
+		});
+		res.end();
+		return;
+	}
+
+	var otp = helper.randomNumericID(4);
+			
+			var client = new twilio(accountSid, authToken);
+			 client.messages.create({
+				body: `Please enter following OTP: ${otp} in the app to enter login.`,
+				to: "6563297257.", // Text this number
+				from: '+658533575' // From a valid Twilio number
+			})
+			.then((err, message) => {
+				if(err){
+					console.log('err--', err);
+				}
+				console.log(message)
+			}).catch((err)=>{
+				console.log(err)
+			});
+			
+			res.json({
+				error: false,
+				message: "OTP sent to your phone, please check your inbox",
+				otp:otp,
+				responseCode: 1
+			});
+			res.end();
+			return;
+}catch(err){
+	response.success=false,
+	response.message="Internal Server Error",
+	response.data =null,
+	res.send(500).json(response)
+}
 }

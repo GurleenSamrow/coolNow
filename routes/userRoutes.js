@@ -7,6 +7,7 @@ module.exports = function(app) {
 	app.get('/test',require('../controllers/api').test);
 	
 	//Customer API	
+	app.post('/userSignupOtp',require('../controllers/api').SignupUserSendOtp);
 	app.post('/users_login',require('../controllers/api').usersLogin);
 	app.post('/users_signup',require('../controllers/api').usersSignup);
 	app.post('/user_changepassword',require('../controllers/api').userChangePassword);
@@ -42,6 +43,7 @@ module.exports = function(app) {
 	app.post('/userServices',require('../controllers/api').selectServices);
 	app.delete('/userDeleteServices',require('../controllers/api').deleteServices);
 	app.post('/addRatting',require('../controllers/api').addRatting);
+	app.get('/getRatting/:technicianId',require('../controllers/api').getRatting);
 	app.get('/technicianHomepage/:userId',require('../controllers/api').homepageDetails);
 	
 
