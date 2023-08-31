@@ -20,7 +20,7 @@ var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
 
 
-const getAvailableTeam =  async (location, startTime, endTime) => {
+const getAvailableTeam =  async (location, startTime, endTime, bookingId  = null) => {
    
     if(location.district){
 
@@ -53,7 +53,7 @@ const getAvailableTeam =  async (location, startTime, endTime) => {
                     for (const team of techteams) {
                         //Find team availibality in selected slot...
                         if(!foundTeam){
-                            var is_exists = await appointmentModel.find({
+                            var isWhere = {
                                 team_id: team._id,
                                 $or: [
                                     { $and : [ 
@@ -79,7 +79,11 @@ const getAvailableTeam =  async (location, startTime, endTime) => {
                                         }
                                     ]}   
                                 ]
-                            })
+                            };
+                            if(bookingId){
+                                isWhere._id = {$ne : mongoose.Types.ObjectId(bookingId)}
+                            }
+                            var is_exists = await appointmentModel.find(isWhere)
                             if(is_exists.length == 0){
                                 foundTeam = team; 
                             }
@@ -1656,6 +1660,93 @@ module.exports.userAppointments = async (req, res) => {
     }
 }
 
+//Appointments..Reschedule.............................................
+module.exports.userAppointmentsReschedule = async (req, res) => {
+    try {
+        const { body } = req;
+        const { _id } = req.params;
+        
+        const data = await appointmentModel.findById({_id: _id})
+        if (data._id) {
+            var date = (body.date) ? body.date : "";
+            var timeSlots = (body.time_slot) ? body.time_slot : "";
+           
+            if(!date || !timeSlots){
+                res.json({
+                    error: true,
+                    message: "Required parameters missing!"
+                });
+                res.end();
+                return;
+            }
+ 
+            var startTimeString = date+" "+timeSlots.start_time_slot+":00";
+            var startTimeFormat = moment(startTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+            var endTimeString = date+" "+timeSlots.end_time_slot+":00";
+            var endTimeFormat = moment(endTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]')
+ 
+            //Get available team..
+            var teamId = await getAvailableTeam(data.delivery_location, startTimeFormat, endTimeFormat, _id);
+            if(teamId.success && teamId.team_id){
+                teamId = teamId.team_id;
+
+                //update time slot and team..
+                const appointmenUpdate = await appointmentModel.updateOne(
+                    { _id: mongoose.Types.ObjectId(_id) },
+                    {
+                        $set: {
+                            team_id: teamId,
+                            start_time : new Date(startTimeFormat),
+                            end_time : new Date(endTimeFormat),
+                            updated_at: new Date(),
+                        }
+                    }
+                )
+                if(appointmenUpdate){
+                    res.json({
+                        error: false,
+                        message: 'Booking rescheduled!',
+                        data : { team_id : teamId }
+                    });
+                    res.end();
+                    return;
+                }else{
+                    res.json({
+                        error: true,
+                        message: "Something went wrong. Please try again!",
+                    });
+                    res.end();
+                    return;
+                }
+            }else{
+                res.json({
+                    error: true,
+                    message: teamId.message
+                });
+                res.end();
+                return;
+            }
+        } else {
+            res.json({
+                error: true,
+                message: "No booking details found!",
+                responseCode: 0
+            });
+            res.end();
+            return;
+        }
+
+    } catch (err) {
+        res.json({
+            error: true,
+            message: "Internal Server Error!",
+            mongoose_error: JSON.stringify(err)
+        });
+        res.end();
+        return;
+    }
+}
+
 //addpackage
 module.exports.addPackage = async (req, res) => {
     try {
@@ -1762,7 +1853,8 @@ module.exports. updatedBookingStatus = async (req, res) => {
                 { _id: mongoose.Types.ObjectId(_id) },
                 {
                     $set: {
-                        status: status
+                        status: status,
+                        status_date: new Date()
                     }
                 }
             )
