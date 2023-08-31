@@ -4,7 +4,7 @@ const moment = require('moment');
 
 
 function Service() {
-    
+
 }
 /**
  * @api {post} /api/v1/add/service Add Service
@@ -72,9 +72,9 @@ Service.prototype.Add = (req, res) => {
     }
     serviceModel.create(req.body, (err, data) => {
         if (err) {
-                return res.Err(err);   
-        } else {            
-                return res.apiRes(200, true, 'Request completed successfully.', {data});         
+            return res.Err(err);
+        } else {
+            return res.apiRes(200, true, 'Request completed successfully.', { data });
 
         }
     });
@@ -82,34 +82,34 @@ Service.prototype.Add = (req, res) => {
 Service.prototype.Detail = (req, res) => {
 
     serviceModel.findById(req.params.id, (err, data) => {
-            if (err) {
-                return res.Err(err);
-            } else {
-                
-                if (!banner) {
-                    return res.apiRes(409, false, 'model not found.');
-                } else {
-                    return res.apiRes(200, true, 'model Data.', {data});
+        if (err) {
+            return res.Err(err);
+        } else {
 
-                }
+            if (!banner) {
+                return res.apiRes(409, false, 'model not found.');
+            } else {
+                return res.apiRes(200, true, 'model Data.', { data });
+
             }
-            
-        }).lean();
-} 
+        }
+
+    }).lean();
+}
 
 
 
 
 Service.prototype.Update = (req, res) => {
     var conditions = { _id: req.params.id }
-    if(req.body.image && req.body.image==''){
+    if (req.body.image && req.body.image == '') {
         delete req.body.image;
     }
-    serviceModel.update(conditions,req.body, (err, data) => {
+    serviceModel.update(conditions, req.body, (err, data) => {
         if (err) {
             res.Err(err)
-        } else {            
-                return res.apiRes(200, true, 'Request completed successfully.', {data});         
+        } else {
+            return res.apiRes(200, true, 'Request completed successfully.', { data });
 
         }
     });
@@ -122,32 +122,32 @@ Service.prototype.List = (req, res) => {
     /*if (req.decoded.userRole == 'admin') {
         //query = {type: req.query.type, status: {$ne: 'deleted'}};
     }*/
-    let query           = {status: {$ne: 'deleted'}};
+    let query = { status: { $ne: 'deleted' } };
     let sortIndex = -1;
-    let orderBy = {sort: {createdAt: sortIndex}};
+    let orderBy = { sort: { createdAt: sortIndex } };
 
     if (req.body['order'][0]['column'] && req.body['order'][0]['column'] == 0) {
         sortIndex = (req.body['order'][0]['dir'] && req.body['order'][0]['dir'] == 'desc') ? -1 : 1;
-        orderBy = {sort: {title: sortIndex}};
-    }  else if (req.body['order'][0]['column'] && req.body['order'][0]['column'] == 1) {
+        orderBy = { sort: { title: sortIndex } };
+    } else if (req.body['order'][0]['column'] && req.body['order'][0]['column'] == 1) {
         sortIndex = (req.body['order'][0]['dir'] && req.body['order'][0]['dir'] == 'desc') ? -1 : 1;
-        orderBy = {sort: {title: sortIndex}};
+        orderBy = { sort: { title: sortIndex } };
     } else if (req.body['order'][0]['column'] && req.body['order'][0]['column'] == 2) {
         sortIndex = (req.body['order'][0]['dir'] && req.body['order'][0]['dir'] == 'desc') ? -1 : 1;
-        orderBy = {sort: {text: sortIndex}};
-    }  else if (req.body['order'][0]['column'] && req.body['order'][0]['column'] == 3) {
+        orderBy = { sort: { text: sortIndex } };
+    } else if (req.body['order'][0]['column'] && req.body['order'][0]['column'] == 3) {
         sortIndex = (req.body['order'][0]['dir'] && req.body['order'][0]['dir'] == 'desc') ? -1 : 1;
-        orderBy = {sort: {sortOrder: sortIndex}};
-    }else if (req.body['order'][0]['column'] && req.body['order'][0]['column'] == 4) {
+        orderBy = { sort: { sortOrder: sortIndex } };
+    } else if (req.body['order'][0]['column'] && req.body['order'][0]['column'] == 4) {
         sortIndex = (req.body['order'][0]['dir'] && req.body['order'][0]['dir'] == 'desc') ? -1 : 1;
-        orderBy = {sort: {createdAt: sortIndex}};
+        orderBy = { sort: { createdAt: sortIndex } };
     }
 
     if (req.body['search']['value'] && req.body['search']['value'] != '') {
         let searchQuery = [
-            {'title': {$regex: req.body['search']['value'], $options: 'i'}},
-            {'text': {$regex: req.body['search']['value'], $options: 'i'}},
-            {'sortOrder': {$regex: req.body['search']['value'], $options: 'i'}}
+            { 'title': { $regex: req.body['search']['value'], $options: 'i' } },
+            { 'text': { $regex: req.body['search']['value'], $options: 'i' } },
+            { 'sortOrder': { $regex: req.body['search']['value'], $options: 'i' } }
         ];
 
         query.$or = searchQuery;
@@ -168,17 +168,17 @@ Service.prototype.List = (req, res) => {
                 if (error) {
                     res.Err(error);
                 } else {
-                    let data        = [];
+                    let data = [];
                     if (coupons.length > 0) {
                         async.each(coupons, (item, cb) => {
                             let nestedData = [];
-                            let image = (item.image)? "<img src='/"+item.image+"' class='brand-image' height='50' width='50'>":'';
+                            let image = (item.image) ? "<img src='/" + item.image + "' class='brand-image' height='50' width='50'>" : '';
                             nestedData.push(image);
                             nestedData.push(item.title);
                             nestedData.push(item.text);
                             nestedData.push(item.sortOrder);
                             nestedData.push(moment(item.createdAt).format('DD MM YYYY'));
-                            let action = '<div class="approve-button"><a href="/cms/editbanner/'+ item['_id']+'" class="view">Edit</a>';
+                            let action = '<div class="approve-button"><a href="/cms/editbanner/' + item['_id'] + '" class="view">Edit</a>';
                             action += '&nbsp;&nbsp;<a href="javascript:;" data-id="' + item['_id'] + '" data-type="Banner" class="reject" onclick="Adduser.userchangeStatus(this)">Delete</a></div>';
                             nestedData.push(action);
                             data.push(nestedData);
@@ -198,22 +198,22 @@ Service.prototype.List = (req, res) => {
 
     ], (error, data, countdata) => {
         if (error) {
-            return res.json({draw: parseInt(req.body.draw), recordsTotal: 0, recordsFiltered: 0, data: []});
+            return res.json({ draw: parseInt(req.body.draw), recordsTotal: 0, recordsFiltered: 0, data: [] });
         } else {
-            if(data){
-                return res.json({draw: parseInt(req.body.draw), recordsTotal: parseInt(countdata), recordsFiltered: parseInt(countdata), data: data});
-            }else{
-                return res.json({draw: parseInt(req.body.draw), recordsTotal: 0, recordsFiltered: 0, data: []});
+            if (data) {
+                return res.json({ draw: parseInt(req.body.draw), recordsTotal: parseInt(countdata), recordsFiltered: parseInt(countdata), data: data });
+            } else {
+                return res.json({ draw: parseInt(req.body.draw), recordsTotal: 0, recordsFiltered: 0, data: [] });
             }
-           
+
         }
     });
 
 
 };
 
-Service.prototype.Delete = (req,res)=>{
-    serviceModel.findByIdAndUpdate(req.body.id, {status: 'deleted'}, {new : true}, (err, task) => {
+Service.prototype.Delete = (req, res) => {
+    serviceModel.findByIdAndUpdate(req.body.id, { status: 'deleted' }, { new: true }, (err, task) => {
         if (err) {
             res.Err(err);
         } else {
@@ -266,16 +266,17 @@ Service.prototype.Delete = (req,res)=>{
  * @apiError {json} AuthTokenExpiredError { message: 'Session expired. You need to login again.' , success: false, sessionExpired: true}
  */
 
-Service.prototype.getService = (req,res)=>{
-    serviceModel.find({status: 'active'},(err, data) => {
+Service.prototype.getService = (req, res) => {
+    serviceModel.find({ status: 'active' }, (err, data) => {
         if (err) {
             res.Err(err);
         } else {
-            return res.apiRes(200, true, 'Request completed successfully', {data});
+            return res.apiRes(200, true, 'Request completed successfully', { data });
         }
     });
 
 };
 
 
-module.exports  = new Service();
+module.exports = new Service();
+

@@ -5,29 +5,29 @@
 		package_name: {
 			type: String,
 			trim: true,
-			required: true
+			//required: true
 		},
 		description: {
 			type: String,
-			required: false,
+			//required: false,
 			trim: true
 		},
 		package_price: {
 			type: Number,
-			required: true
+			//required: true
 		},
 		items: {
-			type: [], // list of services 
-			required: true
+			type: Array, // list of services 
+			//required: true
 		},
 		package_status: {
 			type: Boolean,
-			required: true,
+			//required: true,
 			default: true
 		},
 		is_deleted: {
 			type: Boolean,
-			required: false,
+			//required: false,
 			default: false
 		},
 		created_at: { type: Date, default: Date.now },

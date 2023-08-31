@@ -108,5 +108,19 @@ module.exports = function (app) {
   
     // Appointments...
     app.post('/appointments', dashboardController.userAppointments);
+    app.post('/updateBookingStatus/:_id',dashboardController.updatedBookingStatus);
+    app.get('/bookingDetails/:_id', dashboardController.bookingDetails);
+
+
+    //pacakage
+
+    app.post('/package', dashboardController.addPackage);
+    app.put('/package/:_id', dashboardController.updatedPackage);
+    app.get('/package', dashboardController.getAllPackage);
+    app.get('/package/:_id', dashboardController.getPackageById);
+    app.delete('/package/:_id', dashboardController.deletePackage);
+
+
+
 
 };

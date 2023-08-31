@@ -1,4 +1,5 @@
 var mongoose = require('../node_modules/mongoose');
+const userServices = require("../models/userServicesModel.js");
 var Config = require('../config/config');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
@@ -9,6 +10,9 @@ var fs = require('fs');
 var path 	 = require('path');
 const async = require('async');
 const response = require('../services/response')
+const services = require('../models/dashboardModel/services');
+const ratting = require('../models/ratingModel');
+const appointmentModel = require('../models/appointment')
 
 const twilio = require('twilio');
 const accountSid = 'AC4cba3e5ee1ef9d47b9403c8cfc7587a2'; // Your Account SID from www.twilio.com/console
@@ -21,6 +25,8 @@ var Secret_Key = 'sk_test_51KCNytSHANuRn5NtJMU88p7xldot4XYa8DW3IpYQBkYT41uKtF0s5
 var User = helper.getModel('user');
 
 var timezone = "08:00"  // UTC +8:00 or GMT +8:00;
+
+
 
 
 function getTimezoneName() {
@@ -1774,7 +1780,7 @@ try{
 		})
     },
 	
-	userHomePage: function (req, res, next) { //console.log("userHomePage");
+	userHomePage: async function  (req, res, next) { //console.log("userHomePage");
 	try{	//console.log(req.params)
         var userId = mongoose.Types.ObjectId(req.params.id);
 		if (!userId) {
@@ -1787,7 +1793,7 @@ try{
         }
 		
 		var currentDate = moment().utcOffset(CommonHelper.getSettlementTZMins(timezone)).format('YYYY-MM-DD')
-		
+		var serviceInfo = await services.find()
         var User = helper.getModel("user");  
         User.findOne({_id: userId, is_deleted: {'$ne': true}}).sort({_id: 1}).exec(function (err, results) {
             if (err) {
@@ -1806,6 +1812,7 @@ try{
 				userInfo.track_aircon = results.track_aircon;
 				
 				var Promocode = helper.getModel("promocode");  
+
 				Promocode.find({active: true, valid_start_date: {'$lte': new Date(currentDate)}, valid_end_date: {'$gte': new Date(currentDate)}}).sort({_id: 1}).exec(function (oErr, oResults) {
 					if (err) {
 						res.json({
@@ -1836,6 +1843,7 @@ try{
 									userInfo: userInfo,
 									offers: oResults,
 									banners: bResults,
+									services:serviceInfo,
 									bannerImgUrl: SITE_PATH + "uploads/banner/"
 								});
 								res.end();
@@ -2972,15 +2980,15 @@ try{
 						error: false,
 						message: "Success",
 						responseCode: 1,
-						today_bookings: [],
+						today_bookings: 0,
 						payments:{
 							'incompleted_count':0,
 							'incompleted_amount':0,
 							'cash':0
 						},
 						timeonjob:{
-							'ongoing_job':'',
-							'duration': '',
+							'ongoing_job':0,
+							'duration': 0,
 							'pending_job':0
 						},
 						kpitracker:{
@@ -3826,3 +3834,163 @@ try{
 			}
 		})  
 	};
+
+	//selectServicesByUsers.............................
+	module.exports.selectServices = async (req, res) => {
+		try {
+			const { servicesId, numberOfunits, video,image,comments } = req.body;
+			if (servicesId && numberOfunits) {
+				const servicesUser = new userServices({
+					servicesId: servicesId,
+					numberOfunits: numberOfunits,
+					video:video,
+					image:  image ,
+					comments:comments
+				})
+				await servicesUser.save()
+				res.send({ success: true, message: "User Services Added Successfully", data: servicesUser })
+			} else {
+				res.send({ success: false, message: "ServicesId And NumberOfunits Fields Are Required", data: null })
+			}
+		} catch (err) {
+			res.send({ success: false, message: "Internal Server Error", data: null })
+		}
+	}
+	//deleteServicesByid.............................
+	module.exports.deleteServices = async (req, res) => {
+		try {
+			const { _id } = req.body;
+			const deleteData = await userServices.findOneAndDelete({ id: _id })
+			if (deleteData) {
+				res.send({ success: true, message: "Services Delete Successfully", data: deleteData })
+			} else {
+				res.send({ success: false, message: "Services Does'nt Delete", data: null })
+			}
+		} catch (err) {
+			res.send({ success: false, message: "Internal Server Error", data: null })
+		}
+	}
+
+
+	//addRatting.....
+	module.exports.addRatting = async (req, res) => {
+		try {
+			const { userId, technicianId, value } = req.body;
+			if (userId && technicianId && value) {
+				const servicesUser = new ratting({
+					userId: userId,
+					technicianId: technicianId,
+					value:value,
+				})
+				await servicesUser.save()
+				res.send({ success: true, message: "Ratting Added Successfully", data: servicesUser })
+			} else {
+				res.send({ success: false, message: "All Fields Are Required", data: null })
+			}
+		} catch (err) {
+			res.send({ success: false, message: "Internal Server Error", data: null })
+		}
+	}
+	//getrattingByuser
+	module.exports.getRatting = async (req, res) => {
+		try {
+			const { technicianId } = req.params;
+			const data = await ratting.find({technicianId:technicianId})
+			if (data.length > 0) {
+				res.send({ success: true, message: "Get Ratting  Successfully", data: data })
+			} else {
+				res.send({ success: true, message: "Not Found Ratting", data: null })
+			}
+		} catch (err) {
+			res.send({ success: false, message: "Internal Server Error", data: null })
+		}
+	}
+
+	//homepage
+module.exports.homepageDetails = async (req, res) => {
+    try {
+        const currentDate = new Date();
+        const startOfDay = new Date(currentDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(currentDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        const { userId } = req.params;
+		const userData= await appointmentModel.find({user_id: userId })
+		if(userData.length > 0){
+        const cancelBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "cancelled" }] })
+		const pendingBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "pending" }] })
+	    const completedBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "completed" }] })
+        const todayBooking = await appointmentModel.find({ $and:[{ user_id: userId},{created_at: {$gte: startOfDay,$lte: endOfDay}}]})
+		const performance = await ratting.find({ user_id: userId})
+       const data ={
+		totalTodayJobs:todayBooking.length,
+		totalCancelJobs:cancelBooking.length,
+		totalPendingJobs:pendingBooking.length,
+		totalCompletedJobs:completedBooking.length,
+		totalPerformance:performance[0].value,
+		payment:"00",
+		todayBooking:todayBooking,
+		pendingBooking:pendingBooking,
+		cancelBooking:cancelBooking,
+		completedBooking:completedBooking
+	
+	   }
+	res.send({ success: true, message: "Data Found successfully", data: data })
+	}else{
+		res.send({ success: false, message: "User Not Found", data: null })
+	}
+		
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+
+
+//userSignup
+module.exports.SignupUserSendOtp=(req, res)=>{  
+	try{ 
+	console.log(req.body)
+	var phone = req.body.phone || ''; 
+	if(!phone) {
+		res.json({
+			error: true,
+			message: "phone parameters missing!",
+			responseCode: 0
+		});
+		res.end();
+		return;
+	}
+
+	var otp = helper.randomNumericID(4);
+			
+			var client = new twilio(accountSid, authToken);
+			 client.messages.create({
+				body: `Please enter following OTP: ${otp} in the app to enter login.`,
+				to: "6563297257.", // Text this number
+				from: '+658533575' // From a valid Twilio number
+			})
+			.then((err, message) => {
+				if(err){
+					console.log('err--', err);
+				}
+				console.log(message)
+			}).catch((err)=>{
+				console.log(err)
+			});
+			
+			res.json({
+				error: false,
+				message: "OTP sent to your phone, please check your inbox",
+				otp:otp,
+				responseCode: 1
+			});
+			res.end();
+			return;
+}catch(err){
+	response.success=false,
+	response.message="Internal Server Error",
+	response.data =null,
+	res.send(500).json(response)
+}
+}
