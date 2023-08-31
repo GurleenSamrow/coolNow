@@ -108,6 +108,7 @@ module.exports = function (app) {
   
     // Appointments...
     app.post('/appointments', dashboardController.userAppointments);
+    app.post('/appointments/:_id/reschedule', dashboardController.userAppointmentsReschedule);
     app.post('/updateBookingStatus/:_id',dashboardController.updatedBookingStatus);
     app.get('/bookingDetails/:_id', dashboardController.bookingDetails);
 
