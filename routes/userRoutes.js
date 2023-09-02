@@ -45,6 +45,7 @@ module.exports = function(app) {
 	app.post('/addRatting',require('../controllers/api').addRatting);
 	app.get('/getRatting/:technicianId',require('../controllers/api').getRatting);
 	app.get('/technicianHomepage/:userId',require('../controllers/api').homepageDetails);
-	
-
+	app.post('/addCart',require('../controllers/api').addCartServices);
+	app.get('/getCart/:userId',require('../controllers/api').getCart);
+    app.delete('/removeTocart/:_id',require('../controllers/api').removeCart);
 }; 

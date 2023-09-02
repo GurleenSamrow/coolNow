@@ -13,6 +13,7 @@ const response = require('../services/response')
 const services = require('../models/dashboardModel/services');
 const ratting = require('../models/ratingModel');
 const appointmentModel = require('../models/appointment')
+const cartModel = require('../models/cartModel')
 
 const twilio = require('twilio');
 const accountSid = 'AC4cba3e5ee1ef9d47b9403c8cfc7587a2'; // Your Account SID from www.twilio.com/console
@@ -3838,14 +3839,15 @@ try{
 	//selectServicesByUsers.............................
 	module.exports.selectServices = async (req, res) => {
 		try {
-			const { servicesId, numberOfunits, video,image,comments } = req.body;
-			if (servicesId && numberOfunits) {
+			const { servicesId, numberOfunits, video,image,comments,userId } = req.body;
+			if (servicesId && numberOfunits && userId) {
 				const servicesUser = new userServices({
 					servicesId: servicesId,
 					numberOfunits: numberOfunits,
 					video:video,
 					image:  image ,
-					comments:comments
+					comments:comments,
+					userId:userId
 				})
 				await servicesUser.save()
 				res.send({ success: true, message: "User Services Added Successfully", data: servicesUser })
@@ -3993,4 +3995,61 @@ module.exports.SignupUserSendOtp=(req, res)=>{
 	response.data =null,
 	res.send(500).json(response)
 }
+}
+
+
+
+//addToCart
+module.exports.addCartServices = async (req, res) => {
+	try {
+		const { servicesId, numberOfunits, video,image,comments,userId } = req.body;
+		if (servicesId && numberOfunits && userId) {
+			const cartUser = new cartModel({
+				servicesId: servicesId,
+				numberOfunits: numberOfunits,
+				video:video,
+				image:  image ,
+				userId:userId,
+				comments:comments
+			})
+			await cartUser.save()
+			res.send({ success: true, message: "User Services Added To cart Successfully", data: cartUser })
+		} else {
+			res.send({ success: false, message: "ServicesId ,userId And NumberOfunits Fields Are Required", data: null })
+		}
+	} catch (err) {
+		res.send({ success: false, message: "Internal Server Error", data: null })
+	}
+}
+
+//GetAllcart
+
+module.exports.getCart= async (req, res) => {
+	try {
+		const { userId } = req.params;
+		const data = await cartModel.find({userId:userId})
+		if (data.length > 0) {
+			res.send({ success: true, message: "Get All Cart List  Successfully", data: data })
+		} else {
+			res.send({ success: true, message: "Not Found Cart", data: null })
+		}
+	} catch (err) {
+		res.send({ success: false, message: "Internal Server Error", data: null })
+	}
+}
+
+//remove to cart 
+
+module.exports.removeCart = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const deleteData = await cartModel.findByIdAndDelete(_id)
+        if (deleteData) {
+            res.send({ success: true, message: "Cart remove  Successfully", data: deleteData })
+        } else {
+            res.send({ success: false, message: "Cart Does't Remove", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
 }

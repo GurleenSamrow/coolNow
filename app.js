@@ -5,7 +5,7 @@
 var express  = require(__dirname + '/node_modules/express');
 var path 	 = require('path');
 var flash    = require(__dirname + '/node_modules/connect-flash');
-var bodyParser   = require(__dirname + '/node_modules/body-parser');
+//var bodyParser   = require(__dirname + '/node_modules/body-parser');
 var cookieParser = require(__dirname + '/node_modules/cookie-parser');
 var session      = require(__dirname + '/node_modules/express-session');
 //var validator = require(__dirname + '/node_modules/express-validator');
@@ -16,8 +16,9 @@ var helper = require('./helper.js');
 var multer = require('multer');
 var cors = require('cors')
 const cF  = require('./helpers/cF');
+const bodyParser = require('body-parser')
 
-var app      = express();
+var app = express();
 //useCors
 app.use(cors({
     methods: ['GET','POST','DELETE','UPDATE','PUT','PATCH']
@@ -30,7 +31,7 @@ console.log("port "+port);
 app.use(cF.httpResponseApi);
 // set up our express application
 app.use(bodyParser.json()); // get information from html forms
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs'); // set up ejs for templating
 
@@ -59,12 +60,12 @@ app.use(session({ secret: 'ilovescotchscotchyscotchscotch', cookie: { maxAge: 60
 
 app.use(flash()); // use connect-flash for flash messages stored in session
 
-app.use(multer({
-    dest: path.join(__dirname, "upload/"),
-    rename: function (fieldname, filename) {
-        return filename.replace(/\W+/g, '-').toLowerCase() + Date.now()
-    }
-}).any());
+// app.use(multer({
+//     dest: path.join(__dirname, "upload/"),
+//     rename: function (fieldname, filename) {
+//         return filename.replace(/\W+/g, '-').toLowerCase() + Date.now()
+//     }
+// }).any());
 
 //app.use(validator()); //required for Express-Validator
 

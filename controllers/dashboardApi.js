@@ -18,6 +18,7 @@ const appointmentModel = require('../models/appointment');
 const package = require('../models/package');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
+const uploadImage = require('../services/s3Services')
 
 
 const getAvailableTeam =  async (location, startTime, endTime, bookingId  = null) => {
@@ -323,7 +324,7 @@ module.exports.updateCouponsPromoCode = async (req, res) => {
     try {
         const { couponName, code, couponType, discount, amount, startDate, endDate, status, _id } = req.body;
         if (couponName && code && couponType && discount & amount && startDate && endDate && status) {
-            const couponData = await promoCode.updateOne(
+            const couponData = await PromoCode.updateOne(
                 { _id: mongoose.Types.ObjectId(_id) },
                 {
                     $set: {
@@ -353,7 +354,7 @@ module.exports.updateCouponsPromoCode = async (req, res) => {
 //list LeadSource.......................................
 module.exports.getAllPromoCodeCoupon = async (req, res) => {
     try {
-        const promoata = await promoCode.find()
+        const promoata = await PromoCode.find()
         if (promoata.length > 0) {
             res.send({ success: true, message: "Get All Promo Code Successfully", data: promoata })
         } else {
@@ -367,7 +368,7 @@ module.exports.getAllPromoCodeCoupon = async (req, res) => {
 module.exports.deletePromoCodeCoupon = async (req, res) => {
     try {
         const { _id } = req.body;
-        const leadData = await promoCode.findOneAndDelete({ id: _id })
+        const leadData = await PromoCode.findOneAndDelete({ id: _id })
         if (leadData) {
             res.send({ success: true, message: "Promo Code Delete Successfully", data: leadData })
         } else {
@@ -667,12 +668,13 @@ module.exports.deleteServices = async (req, res) => {
 }
 module.exports.addBanner = async (req, res) => {
     try {
-        const { banner_title, banner_description, banner_image, active, scheduleDate, scheduleTime } = req.body;
-        if (banner_title && banner_description && banner_image && active, scheduleDate, scheduleTime) {
+        const { banner_title, banner_description, active, scheduleDate, scheduleTime } = req.body;
+        if (banner_title && banner_description && active, scheduleDate, scheduleTime) {
+            const image  = await uploadImage.uploadImage(req.file)
             const bannerInfo = new banner({
                 banner_title: banner_title,
                 banner_description: banner_description,
-                banner_image: banner_image,
+                banner_image: image,
                 active: active,
                 scheduleDate: scheduleDate,
                 scheduleTime: scheduleTime
@@ -718,8 +720,9 @@ module.exports.updatedBanner = async (req, res) => {
 //addServices.................
 module.exports.addServices = async (req, res) => {
     try {
-        const { title, description, sub_service, price, commision_margin, commision_amount, cost, icon, status } = req.body;
-        if (title && description && sub_service && price && commision_margin && commision_amount && cost && icon && status) {
+        const { title, description, sub_service, price, commision_margin, commision_amount, cost, status } = req.body;
+        if (title && description && price && commision_margin && commision_amount && cost && status) {
+           const image  = await uploadImage.uploadImage(req.file)
             const ServicesInfo = new services({
                 title: title,
                 description: description,
@@ -728,7 +731,7 @@ module.exports.addServices = async (req, res) => {
                 commision_margin: commision_margin,
                 commision_amount: commision_amount,
                 cost: cost,
-                icon: icon,
+                icon: image,
                 status: status
             })
             await ServicesInfo.save()
@@ -737,6 +740,7 @@ module.exports.addServices = async (req, res) => {
             res.status(400).send({ success: false, message: "All Fields Are Required", data: null })
         }
     } catch (err) {
+        console.log("error",err);
         res.status(500).send({ success: false, message: "Internal Server Error", data: null })
     }
 }
@@ -1879,6 +1883,20 @@ module.exports.bookingDetails = async (req, res) => {
             res.send({ success: true, message: "Get Booking Details Successfully", data: data })
         } else {
             res.send({ success: true, message: "Not Found Booking Details", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//bookingList 
+module.exports.getAllbooking = async (req, res) => {
+    try {
+        const data = await appointmentModel.find()
+        if (data.length > 0) {
+            res.send({ success: true, message: "Get  All Booking Successfully", data: data })
+        } else {
+            res.send({ success: true, message: "Not Found Booking", data: null })
         }
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })

@@ -11,6 +11,7 @@ const serviceSchema   = new Schema({
 	commision_margin: {type: String},
 	commision_amount: {type: String},
 	cost: {type: String},
+	icon:{type:String},
     status: {type: String,enum: ['active','deleted'],default:'active'},
 },
 {timestamps: true});

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const userServicesSchema   = new Schema({
+const userCartSchema   = new Schema({
     servicesId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'service',
@@ -17,4 +17,4 @@ const userServicesSchema   = new Schema({
 {timestamps: true});
 
 
-module.exports  = mongoose.model('userServices', userServicesSchema);
+module.exports  = mongoose.model('cart', userCartSchema);
