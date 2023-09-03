@@ -14,6 +14,7 @@ const services = require('../models/dashboardModel/services');
 const ratting = require('../models/ratingModel');
 const appointmentModel = require('../models/appointment')
 const cartModel = require('../models/cartModel')
+const uploadImage = require('../services/s3Services')
 
 const twilio = require('twilio');
 const accountSid = 'AC4cba3e5ee1ef9d47b9403c8cfc7587a2'; // Your Account SID from www.twilio.com/console
@@ -3419,65 +3420,84 @@ try{
         });
     },
 
-	uploadProfilePhoto: function(req, res, next){ console.log("uploadProfilePhoto");
+	uploadProfilePhoto: async function(req, res, next){ 
 	try{
-		var post = req.body;
-		//console.log(post)
-		
-		var userId = (post.user_id) ? mongoose.Types.ObjectId(post.user_id) : ""; 
-		var userType = (post.user_type) ? post.user_type : "";
-		var fileLength = (req.files) ? req.files.length : 0;
-        if(!userId || !userType || fileLength <=0) {
-            res.json({
-                error: true,
-                message: "Required parameters missing!",
-				responseCode: 0
-            });
-            res.end();
-            return;
-        }
-		
-		if(userType == 'T'){
-			var base_folder = path.join(BASE_URL, "public/uploads/technician");
-			var site_url = SITE_PATH + "uploads/technician/";
-		} else {
-			var base_folder = path.join(BASE_URL, "public/uploads/customer");
-			var site_url = SITE_PATH + "uploads/customer/";
+		const _id = req.body.user_id;
+		if(_id){
+			const image  = await uploadImage.uploadImage(req.file)
+			const userData = await User.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                {
+                    $set: {
+                        profile_photo: image
+                    }
+                })
+            if (userData.modifiedCount === 1) {
+                res.send({ success: true, message: "User Profile Updated Successfully", data: null })
+            } else {
+                res.send({ success: false, message: "User Profile  Does't Updated", data: null })
+            }
+
+		}else{
+			res.send({ success: false, message: "UserId Fields Are Required", data: null })
 		}
+		// var post = req.body;
+		// //console.log(post)
 		
-		_uploadFiles(req, base_folder, function (succeeded, failed) {
-			if (!succeeded.length) {
-				var message = "Something went wrong to upload profile image.";
-				var err_msg = JSON.stringify(makeMongooseErrorMsgArray(err));
-				cb(false, message, err_msg);
-			} else {
-				var updateInfo = { profile_photo: succeeded[0] }
-				var conditions = { _id: userId };
-				User.findOneAndUpdate(conditions, {"$set": updateInfo}, {new: true}, function(err, user){
-					if(err || !user){
-						res.json({
-							error: true,
-							message: "Something went wrong to update profile photo "+JSON.stringify(err),
-							responseCode: 0
-						});
-						res.end();
-						return;       
-					} else {
-						res.json({
-							error: false,
-							message: "Photo updated successfully",
-							result:{
-								'image_name':succeeded[0],
-								'image_path':site_url+succeeded[0]
-							},
-							responseCode: 1
-						});
-						res.end();
-						return;
-					}
-				});
-			}
-		});
+		// var userId = (post.user_id) ? mongoose.Types.ObjectId(post.user_id) : ""; 
+		// var userType = (post.user_type) ? post.user_type : "";
+		// var fileLength = (req.files) ? req.files.length : 0;
+        // if(!userId || !userType || fileLength <=0) {
+        //     res.json({
+        //         error: true,
+        //         message: "Required parameters missing!",
+		// 		responseCode: 0
+        //     });
+        //     res.end();
+        //     return;
+        // }
+		
+		// if(userType == 'T'){
+		// 	var base_folder = path.join(BASE_URL, "public/uploads/technician");
+		// 	var site_url = SITE_PATH + "uploads/technician/";
+		// } else {
+		// 	var base_folder = path.join(BASE_URL, "public/uploads/customer");
+		// 	var site_url = SITE_PATH + "uploads/customer/";
+		// }
+		
+		// _uploadFiles(req, base_folder, function (succeeded, failed) {
+		// 	if (!succeeded.length) {
+		// 		var message = "Something went wrong to upload profile image.";
+		// 		var err_msg = JSON.stringify(makeMongooseErrorMsgArray(err));
+		// 		cb(false, message, err_msg);
+		// 	} else {
+		// 		var updateInfo = { profile_photo: succeeded[0] }
+		// 		var conditions = { _id: userId };
+		// 		User.findOneAndUpdate(conditions, {"$set": updateInfo}, {new: true}, function(err, user){
+		// 			if(err || !user){
+		// 				res.json({
+		// 					error: true,
+		// 					message: "Something went wrong to update profile photo "+JSON.stringify(err),
+		// 					responseCode: 0
+		// 				});
+		// 				res.end();
+		// 				return;       
+		// 			} else {
+		// 				res.json({
+		// 					error: false,
+		// 					message: "Photo updated successfully",
+		// 					result:{
+		// 						'image_name':succeeded[0],
+		// 						'image_path':site_url+succeeded[0]
+		// 					},
+		// 					responseCode: 1
+		// 				});
+		// 				res.end();
+		// 				return;
+		// 			}
+		// 		});
+		// 	}
+		// });
 	}catch(err){
 		response.success=false,
 		response.message="Internal Server Error",

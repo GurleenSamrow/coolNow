@@ -1,7 +1,8 @@
-
+const {upload} = require('../services/multerServices')
 module.exports = function(app) {
 	const ServiceController      = require('../controllers/serviceController');
 	const { uploadSingle }    = require('../helpers/uploader.helper');
+	
 	//Common 
 	app.post('/users_logout',require('../controllers/api').logOut);
 	app.get('/test',require('../controllers/api').test);
@@ -33,7 +34,7 @@ module.exports = function(app) {
 	app.post('/user_datewiseavailableslots',require('../controllers/api').userDatewiseAvailableSlots);
 	app.post('/user_monthavailableslotsdays',require('../controllers/api').userMonthAvailableSlotsDays);
 	app.post('/user_checkpromocode',require('../controllers/api').userCheckPromoCode);
-	app.post('/user_uploadprofilephoto', require('../controllers/api').uploadProfilePhoto);
+	app.post('/user_uploadprofilephoto',upload.single('image'),require('../controllers/api').uploadProfilePhoto);
 	app.get('/user_chatlist/:id', require('../controllers/api').usersChatList);
 	//app.post('/user_payment', require('../controllers/api').userPayment);
 	
