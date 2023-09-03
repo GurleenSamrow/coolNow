@@ -2,9 +2,10 @@
 	var mongoose = require('mongoose');
 
 	var chatSchema = new mongoose.Schema({
-		chat_id: {
-		  type: Number,
-		  required: true
+		userId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'user',
+			required: true 
 		},
 		sender_id: {
 			type: mongoose.Schema.Types.ObjectId,
@@ -23,7 +24,7 @@
 		},
 		type: {
 			type: String,
-			required: true,
+			required: false,
 			default: 'text'  // text, image, video
 		},
 		image_url: {
