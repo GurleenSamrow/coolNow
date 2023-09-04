@@ -3432,7 +3432,7 @@ try{
                         profile_photo: image
                     }
                 })
-            if (userData.modifiedCount === 1) {
+            if (userData.modifiedCount == 1) {
                 res.send({ success: true, message: "User Profile Updated Successfully", data: null })
             } else {
                 res.send({ success: false, message: "User Profile  Does't Updated", data: null })
