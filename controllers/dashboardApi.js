@@ -256,7 +256,8 @@ module.exports.updateLead = async (req, res) => {
                 }
             );
             if (leadData.modifiedCount === 1) {
-                res.send({ success: true, message: "Lead Updated Successfully", data: null })
+                const data =  await soucreLead.find({_id:_id})
+                res.send({ success: true, message: "Lead Updated Successfully", data: data })
             } else {
                 res.send({ success: false, message: "Lead Don't Updated", data: null })
             }
@@ -340,7 +341,8 @@ module.exports.updateCouponsPromoCode = async (req, res) => {
                 }
             );
             if (couponData.modifiedCount === 1) {
-                res.send({ success: true, message: "Promo Code Updated Successfully", data: couponData })
+                const data =  await PromoCode.find({_id:_id})
+                res.send({ success: true, message: "Promo Code Updated Successfully", data: data })
             } else {
                 res.send({ success: false, message: "Promo Code Don't Updated", data: null })
             }
@@ -406,7 +408,7 @@ module.exports.addTechTeam = async (req, res) => {
 module.exports.updateTechTeam = async (req, res) => {
     try {
         const { memberId, teamNme, Vehicle, selectZone, SelectPriority, _id, days } = req.body;
-        if (memberId && teamNme && Vehicle && selectZone && SelectPriority, days) {
+        if (memberId && teamNme && Vehicle && selectZone && SelectPriority && days) {
             const techData = await techteam.updateOne(
                 { _id: mongoose.Types.ObjectId(_id) },
                 {
@@ -421,9 +423,10 @@ module.exports.updateTechTeam = async (req, res) => {
                 }
             );
             if (techData.modifiedCount === 1) {
-                res.send({ success: true, message: "Tech Updated Successfully", data: couponData })
+                const data =  await techteam.find({_id:_id})
+                res.send({ success: true, message: "Tech Updated Successfully", data: data })
             } else {
-                res.send({ success: false, message: "Tech  Don't Updated", data: couponData })
+                res.send({ success: false, message: "Tech  Does't Updated", data: null })
             }
         } else {
             res.send({ success: false, message: "All Fields Are Required", data: null })
@@ -536,7 +539,8 @@ module.exports.updatedManualBooking = async (req, res) => {
                     }
                 })
             if (manualData.modifiedCount === 1) {
-                res.send({ success: true, message: "Manual Booking  Updated Successfully", data: null })
+                const data =  await manualBooking.find({_id:_id})
+                res.send({ success: true, message: "Manual Booking  Updated Successfully", data: data })
             } else {
                 res.send({ success: false, message: "Manual Booking Don't Updated", data: null })
             }
@@ -1106,7 +1110,8 @@ module.exports.updatedSku = async (req, res) => {
                     }
                 })
             if (skuData.modifiedCount === 1) {
-                res.send({ success: true, message: "Sku Updated Successfully", data: null })
+                const data =  await skuModel.find({_id:_id})
+                res.send({ success: true, message: "Sku Updated Successfully", data: data })
             } else {
                 res.send({ success: false, message: "Sku Don't Updated", data: null })
             }
@@ -1167,7 +1172,8 @@ module.exports.updatedStock = async (req, res) => {
                     }
                 })
             if (Stock.modifiedCount === 1) {
-                res.send({ success: true, message: "Stock Updated Successfully", data: null })
+                const data =  await stockModel.find({_id:_id})
+                res.send({ success: true, message: "Stock Updated Successfully", data: data })
             } else {
                 res.send({ success: false, message: "Stock Don't Updated", data: null })
             }

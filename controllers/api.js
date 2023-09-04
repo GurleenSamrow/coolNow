@@ -3425,15 +3425,16 @@ try{
 		const _id = req.body.user_id;
 		if(_id){
 			const image  = await uploadImage.uploadImage(req.file)
-			const userData = await User.updateOne(
+			const userDatas = await User.updateOne(
                 { _id: mongoose.Types.ObjectId(_id) },
                 {
                     $set: {
                         profile_photo: image
                     }
                 })
-            if (userData.modifiedCount == 1) {
-                res.send({ success: true, message: "User Profile Updated Successfully", data: null })
+            if (userDatas.modifiedCount == 1) {
+				const userData = await User.find({_id:_id})
+                res.send({ success: true, message: "User Profile Updated Successfully", data: userData })
             } else {
                 res.send({ success: false, message: "User Profile  Does't Updated", data: null })
             }
