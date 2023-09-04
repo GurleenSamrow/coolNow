@@ -3860,8 +3860,9 @@ try{
 	//selectServicesByUsers.............................
 	module.exports.selectServices = async (req, res) => {
 		try {
-			const { servicesId, numberOfunits, video,image,comments,userId } = req.body;
+			const { servicesId, numberOfunits,video,comments,userId } = req.body;
 			if (servicesId && numberOfunits && userId) {
+				const image  = await uploadImage.uploadImage(req.file)
 				const servicesUser = new userServices({
 					servicesId: servicesId,
 					numberOfunits: numberOfunits,

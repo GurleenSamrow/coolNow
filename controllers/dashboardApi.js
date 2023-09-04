@@ -1898,7 +1898,7 @@ module.exports.bookingDetails = async (req, res) => {
 //bookingList 
 module.exports.getAllbooking = async (req, res) => {
     try {
-        const data = await appointmentModel.find()
+        const data = await appointmentModel.find({})
         if (data.length > 0) {
             res.send({ success: true, message: "Get  All Booking Successfully", data: data })
         } else {

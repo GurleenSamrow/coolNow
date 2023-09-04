@@ -41,7 +41,7 @@ module.exports = function(app) {
 	app.get('/servicelist',require('../controllers/api').getServiceList);
 	app.get('/packagelist',require('../controllers/api').getPackageList);
 //NewRoutes
-	app.post('/userServices',require('../controllers/api').selectServices);
+	app.post('/userServices',upload.single('image'),require('../controllers/api').selectServices);
 	app.delete('/userDeleteServices',require('../controllers/api').deleteServices);
 	app.post('/addRatting',require('../controllers/api').addRatting);
 	app.get('/getRatting/:technicianId',require('../controllers/api').getRatting);
