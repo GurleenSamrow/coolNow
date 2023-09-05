@@ -41,7 +41,8 @@
     "stripe": "^8.195.0",
     "sync-each": "^1.0.1",
     "to-absolute-path": "^1.0.0",
-    "twilio": "^3.71.2"
+    "twilio": "^3.71.2",
+    "util": "^0.12.5"
   },
   "devDependencies": {
     "chai": "^4.3.4",

@@ -646,9 +646,11 @@ module.exports.updatedServices = async (req, res) => {
 //list services.......................................
 module.exports.getAllServices = async (req, res) => {
     try {
+        const bannerData = await banner.find()
+        const bannerImage = bannerData[0].banner_image
         const servicesData = await services.find()
         if (servicesData.length > 0) {
-            res.send({ success: true, message: "Get All Services Successfully", data: servicesData })
+            res.send({ success: true, message: "Get All Services Successfully",BannerImage:bannerImage, data: servicesData })
         } else {
             res.send({ success: true, message: "Not Found Services", data: null })
         }

@@ -3933,19 +3933,19 @@ try{
 	//homepage
 module.exports.homepageDetails = async (req, res) => {
     try {
-        const currentDate = new Date();
-        const startOfDay = new Date(currentDate);
+        var currentDate = new Date();
+        var startOfDay = new Date(currentDate);
         startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date(currentDate);
         endOfDay.setHours(23, 59, 59, 999);
         const { userId } = req.params;
 		const userData= await appointmentModel.find({user_id: userId })
 		if(userData.length > 0){
-        const cancelBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "cancelled" }] })
-		const pendingBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "pending" }] })
-	    const completedBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "completed" }] })
-        const todayBooking = await appointmentModel.find({ $and:[{ user_id: userId},{created_at: {$gte: startOfDay,$lte: endOfDay}}]})
-		const performance = await ratting.find({ user_id: userId})
+			var cancelBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "cancelled" }] })
+			var pendingBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "pending" }] })
+			var completedBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "completed" }] })
+			var todayBooking = await appointmentModel.find({ $and:[{ user_id: userId},{created_at: {$gte: startOfDay,$lte: endOfDay}}]})
+			var performance = await ratting.find({ user_id: userId})
        const data ={
 		totalTodayJobs:todayBooking.length,
 		totalCancelJobs:cancelBooking.length,
@@ -3953,6 +3953,7 @@ module.exports.homepageDetails = async (req, res) => {
 		totalCompletedJobs:completedBooking.length,
 		totalPerformance:performance[0].value,
 		payment:"00",
+		tipReceived:"00",
 		todayBooking:todayBooking,
 		pendingBooking:pendingBooking,
 		cancelBooking:cancelBooking,
@@ -3961,7 +3962,16 @@ module.exports.homepageDetails = async (req, res) => {
 	   }
 	res.send({ success: true, message: "Data Found successfully", data: data })
 	}else{
-		res.send({ success: false, message: "User Not Found", data: null })
+     const data ={
+			totalTodayJobs:"00",
+			totalCancelJobs:"00",
+			totalPendingJobs:"00",
+			totalCompletedJobs:"00",
+			totalPerformance:"00",
+			payment:"00",
+			tipReceived:"00",
+	 }
+		res.send({ success: false, message: "Data Found Successfully", data: data })
 	}
 		
     } catch (err) {
@@ -4024,15 +4034,16 @@ module.exports.SignupUserSendOtp=(req, res)=>{
 //addToCart
 module.exports.addCartServices = async (req, res) => {
 	try {
-		const { servicesId, numberOfunits, video,image,comments,userId } = req.body;
-		if (servicesId && numberOfunits && userId) {
+		const {servicesId,subServicesId, numberOfunits, video,image,comments,userId } = req.body;
+		if (numberOfunits && userId) {
 			const cartUser = new cartModel({
 				servicesId: servicesId,
 				numberOfunits: numberOfunits,
 				video:video,
 				image:  image ,
 				userId:userId,
-				comments:comments
+				comments:comments,
+				subServicesId:subServicesId
 			})
 			await cartUser.save()
 			res.send({ success: true, message: "User Services Added To cart Successfully", data: cartUser })
@@ -4072,6 +4083,47 @@ module.exports.removeCart = async (req, res) => {
             res.send({ success: false, message: "Cart Does't Remove", data: null })
         }
     } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+module.exports.updateCart = async (req, res) => {
+    try {
+		const {_id,numberOfunits, video,image,comments } = req.body;
+            const Data = await cartModel.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                {
+                    $set: {
+                        numberOfunits: numberOfunits,
+                        video: video,
+                        image: image,
+                        comments: comments,
+                    }
+                }
+            );
+            if (Data.modifiedCount === 1) {
+				const resData = await cartModel.find({_id:_id})
+                res.send({ success: true, message: "Cart Updated Successfully", data: resData })
+            } else {
+                res.send({ success: false, message: "Cart Don't Updated", data: null })
+            }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//uploadImageAndVideo...........
+const videoUpload = require('../services/s3VideoServices')
+module.exports.uploadImage = async (req, res) => {
+    try {
+		const data = await  videoUpload.uploadImageAndVideo(req.files)
+		if(data){
+			res.send({ success: true, message: "File Upload Successfully", data: data })
+		}else{
+			res.send({ success: false, message: "Something Went Wrong", data: null })
+		}
+		
+	} catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
 }
