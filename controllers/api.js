@@ -14,6 +14,7 @@ const services = require('../models/dashboardModel/services');
 const ratting = require('../models/ratingModel');
 const appointmentModel = require('../models/appointment')
 const cartModel = require('../models/cartModel')
+const chatModel = require('../models/chat')
 const uploadImage = require('../services/s3Services')
 
 const twilio = require('twilio');
@@ -4034,7 +4035,7 @@ module.exports.SignupUserSendOtp=(req, res)=>{
 //addToCart
 module.exports.addCartServices = async (req, res) => {
 	try {
-		const {servicesId,subServicesId, numberOfunits, video,image,comments,userId } = req.body;
+		const {servicesId,subServicesData, numberOfunits, video,image,comments,userId } = req.body;
 		if (numberOfunits && userId) {
 			const cartUser = new cartModel({
 				servicesId: servicesId,
@@ -4043,7 +4044,7 @@ module.exports.addCartServices = async (req, res) => {
 				image:  image ,
 				userId:userId,
 				comments:comments,
-				subServicesId:subServicesId
+				subServicesData:subServicesData
 			})
 			await cartUser.save()
 			res.send({ success: true, message: "User Services Added To cart Successfully", data: cartUser })
@@ -4126,4 +4127,54 @@ module.exports.uploadImage = async (req, res) => {
 	} catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
+}
+
+//chatList........
+module.exports.chatList= async (req, res) => {
+	try {
+		const { sender_id,receiver_id } = req.body;
+		const data = await chatModel.aggregate([
+			{
+			  $match: {
+				$or: [
+				  { sender_id: 'your_sender_id', receiver_id: 'your_receiver_id' },
+				  { sender_id: 'your_receiver_id', receiver_id: 'your_sender_id' },
+				],
+			  },
+			},
+			{
+			  $sort: { createdAt: -1 }, // Sort by createdAt field in descending order
+			},
+			{
+			  $group: {
+				_id: {
+				  sender_id: '$sender_id',
+				  receiver_id: '$receiver_id',
+				},
+				latestMessage: { $first: '$message' }, // Get the latest message
+				createdAt: { $first: '$createdAt' }, // Get the timestamp of the latest message
+			  },
+			},
+			{
+			  $project: {
+				_id: 0, // Exclude the _id field from the result
+				sender_id: '$_id.sender_id',
+				receiver_id: '$_id.receiver_id',
+				latestMessage: 1,
+				createdAt: 1,
+			  },
+			},
+			{
+			  $sort: { createdAt: -1 }, // Sort the result by the latest message timestamp
+			},
+		  ]);
+		  
+		if (data.length > 0) {
+			res.send({ success: true, message: "Get All Cart List  Successfully", data: data })
+		} else {
+			res.send({ success: true, message: "Not Found Cart", data: null })
+		}
+	} catch (err) {
+		res.send({ success: false, message: "Internal Server Error", data: null })
+	}
 }

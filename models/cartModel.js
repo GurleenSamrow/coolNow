@@ -5,9 +5,12 @@ const userCartSchema   = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'service',
     },
-    subServicesId: {
-        type: Array,
-    },
+    subServicesData: [{
+		title:{type: String},
+		description:{type: String},
+		cost:{type: String},
+		image:{type: String},
+	}],
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
