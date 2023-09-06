@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 const serviceSchema   = new Schema({
     title:{type: String},
 	description:{type: String},
+	image:{type: String},
 	sub_service: [{
 		title:{type: String},
 		description:{type: String},

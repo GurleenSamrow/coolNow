@@ -56,7 +56,7 @@ module.exports = function (app) {
 
 
     //Banner..................................
-    app.post('/addBanner',upload.array('image',10),dashboardController.addBanner);
+    app.post('/addBanner',upload.single('image'),dashboardController.addBanner);
     app.post('/updatebanner', dashboardController.updatedBanner);
     app.get('/GetAllBanner', dashboardController.getAllBanner);
     app.post('/deleteBanner', dashboardController.deleteBanner);

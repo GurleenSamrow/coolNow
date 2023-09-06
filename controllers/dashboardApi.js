@@ -677,7 +677,7 @@ module.exports.addBanner = async (req, res) => {
     try {
         const { banner_title, banner_description, active, scheduleDate, scheduleTime } = req.body;
         if (banner_title && banner_description && active, scheduleDate, scheduleTime) {
-            const image  = await bannerAdd.uploadImages(req.files)
+            const image  = await uploadImage.uploadImage(req.file)
             const bannerInfo = new banner({
                 banner_title: banner_title,
                 banner_description: banner_description,
