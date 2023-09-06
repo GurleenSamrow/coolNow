@@ -6,8 +6,7 @@ const userCartSchema   = new Schema({
         ref: 'service',
     },
     subServicesId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'service',
+        type: Array,
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
