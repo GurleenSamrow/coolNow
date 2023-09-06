@@ -4057,14 +4057,33 @@ module.exports.addCartServices = async (req, res) => {
 }
 
 //GetAllcart
-
+// const mongoose = require('mongoose');
 module.exports.getCart= async (req, res) => {
 	try {
 		const { userId } = req.params;
-		const data = await cartModel.findOne({"Services.userId":userId})
-		const servicesData = await servicesModel.find({_id:data.Services[0].servicesId},{sub_service:0})
+		const data = await cartModel.aggregate([
+			{
+			  $lookup: {
+				from: "services",
+				localField: "Services.servicesId",
+				foreignField: "_id",
+				as: "servicesData"
+			  }
+			},
+            {
+			  $project: {
+				"servicesData.sub_service": 0,
+			  }
+			},
+			{
+				$match: {
+				  "Services.userId": mongoose.Types.ObjectId(userId)
+				}
+			  }
+		  ]);
+		//const servicesData = await servicesModel.find({_id:data.Services[0].servicesId})
 	if (data) {
-			res.send({ success: true, message: "Get All Cart List  Successfully", data: data,servicesData:servicesData })
+			res.send({ success: true, message: "Get All Cart List  Successfully", data: data })
 		} else {
 			res.send({ success: true, message: "Not Found Cart", data: null })
 		}
@@ -4078,9 +4097,29 @@ module.exports.getCart= async (req, res) => {
 module.exports.removeCart = async (req, res) => {
     try {
         const { _id } = req.params;
-        const deleteData = await cartModel.findByIdAndDelete(_id)
-        if (deleteData) {
-            res.send({ success: true, message: "Cart remove  Successfully", data: deleteData })
+
+const documentIdToDeleteFrom =_id; 
+const subServiceIdToDelete = "64f869a39ed1cfd86e79c228"; 
+
+const deleteData = await cartModel.updateOne(
+  { _id: documentIdToDeleteFrom },
+  { $pull: { "Services": { _id: subServiceIdToDelete } } }
+);
+
+		// const deleteData = await cartModel.updateOne(
+		// 	{
+		// 	  _id: "64f869a39ed1cfd86e79c227", 
+		// 	  "Services.userId": "6496bcb1b5a045ed8b02239b",
+		// 	  "Services.servicesId": "6896bcb1b5a045ed8b02239b"
+		// 	},
+		// 	{
+		// 	  $pull: {
+		// 		"Services.$.subServicesData": { _id: "64f869a39ed1cfd86e79c229" }
+		// 	  }
+		// 	}
+		//   );
+if (deleteData) {
+    res.send({ success: true, message: "Cart remove  Successfully", data: deleteData })
         } else {
             res.send({ success: false, message: "Cart Does't Remove", data: null })
         }
