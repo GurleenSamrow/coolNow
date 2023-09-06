@@ -4035,11 +4035,10 @@ module.exports.SignupUserSendOtp=(req, res)=>{
 //addToCart
 module.exports.addCartServices = async (req, res) => {
 	try {
-		const {servicesId,subServicesData, numberOfunits, video,image,comments,userId } = req.body;
-		if (numberOfunits && userId) {
+		const {servicesId,subServicesData, video,image,comments,userId } = req.body;
+		if (userId) {
 			const cartUser = new cartModel({
 				servicesId: servicesId,
-				numberOfunits: numberOfunits,
 				video:video,
 				image:  image ,
 				userId:userId,

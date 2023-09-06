@@ -10,6 +10,7 @@ const userCartSchema   = new Schema({
 		description:{type: String},
 		cost:{type: String},
 		image:{type: String},
+        numberOfunits:{type: String},
 	}],
     userId: {
         type: mongoose.Schema.Types.ObjectId,
