@@ -50,5 +50,6 @@ module.exports = function(app) {
 	app.get('/getCart/:userId',require('../controllers/api').getCart);
     app.delete('/removeTocart/:_id',require('../controllers/api').removeCart);
 	app.post('/updateCart',require('../controllers/api').updateCart);
+	app.post('/userChatList',require('../controllers/api').userChatList);
 	app.post('/uploadVideo', upload.fields([{ name: 'image' }, { name: 'video' }]),require('../controllers/api').uploadImage)
 }; 

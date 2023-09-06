@@ -19,7 +19,8 @@ const initChatService = (server) => {
   
       socket.on('sendMessage', async (data) => {
         if (data) {
-            console.log("data",data)
+          socket.emit('sendResponse',data)
+          console.log("data",data)
            const chatMessage = new Chat({
             message:data.message,
             userId:data.userId,
@@ -32,6 +33,9 @@ const initChatService = (server) => {
       });
     });
   };
+  // socket.emit('sendResponse', async (data)=>{
+
+  // })
   
   module.exports = {
     initChatService,

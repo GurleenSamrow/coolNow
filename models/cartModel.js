@@ -17,6 +17,7 @@ const userCartSchema   = new Schema({
 		image:{type: String},
         numberOfunits:{type: String},
         video: {type: String},
+        comment: {type: String},
 	}],
 }]
    

@@ -1,5 +1,6 @@
 var mongoose = require('../node_modules/mongoose');
 const userServices = require("../models/userServicesModel.js");
+const servicesModel = require("../models/serviceModel.js");
 var Config = require('../config/config');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
@@ -4060,9 +4061,10 @@ module.exports.addCartServices = async (req, res) => {
 module.exports.getCart= async (req, res) => {
 	try {
 		const { userId } = req.params;
-		const data = await cartModel.find({userId:userId})
-		if (data.length > 0) {
-			res.send({ success: true, message: "Get All Cart List  Successfully", data: data })
+		const data = await cartModel.findOne({"Services.userId":userId})
+		const servicesData = await servicesModel.find({_id:data.Services[0].servicesId},{sub_service:0})
+	if (data) {
+			res.send({ success: true, message: "Get All Cart List  Successfully", data: data,servicesData:servicesData })
 		} else {
 			res.send({ success: true, message: "Not Found Cart", data: null })
 		}
@@ -4129,34 +4131,34 @@ module.exports.uploadImage = async (req, res) => {
 }
 
 //chatList........
-module.exports.chatList= async (req, res) => {
+module.exports.userChatList= async (req, res) => {
 	try {
 		const { sender_id,receiver_id } = req.body;
 		const data = await chatModel.aggregate([
 			{
 			  $match: {
 				$or: [
-				  { sender_id: 'your_sender_id', receiver_id: 'your_receiver_id' },
-				  { sender_id: 'your_receiver_id', receiver_id: 'your_sender_id' },
+				  { sender_id: sender_id, receiver_id: receiver_id },
+				  { sender_id: receiver_id, receiver_id: sender_id },
 				],
 			  },
 			},
 			{
-			  $sort: { createdAt: -1 }, // Sort by createdAt field in descending order
+			  $sort: { createdAt: -1 }, 
 			},
 			{
 			  $group: {
 				_id: {
-				  sender_id: '$sender_id',
-				  receiver_id: '$receiver_id',
+				  sender_id: sender_id,
+				  receiver_id: receiver_id,
 				},
-				latestMessage: { $first: '$message' }, // Get the latest message
-				createdAt: { $first: '$createdAt' }, // Get the timestamp of the latest message
+				latestMessage: { $first: '$message' }, 
+				createdAt: { $first: '$createdAt' }, 
 			  },
 			},
 			{
 			  $project: {
-				_id: 0, // Exclude the _id field from the result
+				_id: 0, 
 				sender_id: '$_id.sender_id',
 				receiver_id: '$_id.receiver_id',
 				latestMessage: 1,
@@ -4164,14 +4166,14 @@ module.exports.chatList= async (req, res) => {
 			  },
 			},
 			{
-			  $sort: { createdAt: -1 }, // Sort the result by the latest message timestamp
+			  $sort: { createdAt: -1 }, 
 			},
 		  ]);
 		  
 		if (data.length > 0) {
-			res.send({ success: true, message: "Get All Cart List  Successfully", data: data })
+			res.send({ success: true, message: "Data Found  Successfully", data: data })
 		} else {
-			res.send({ success: true, message: "Not Found Cart", data: null })
+			res.send({ success: true, message: "Not Found Data", data: null })
 		}
 	} catch (err) {
 		res.send({ success: false, message: "Internal Server Error", data: null })
