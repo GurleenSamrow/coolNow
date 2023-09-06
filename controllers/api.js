@@ -4035,15 +4035,15 @@ module.exports.SignupUserSendOtp=(req, res)=>{
 //addToCart
 module.exports.addCartServices = async (req, res) => {
 	try {
-		const {servicesId,subServicesData, video,image,comments,userId } = req.body;
-		if (userId) {
+		const {Services} = req.body;
+		if (Services) {
 			const cartUser = new cartModel({
-				servicesId: servicesId,
-				video:video,
-				image:  image ,
-				userId:userId,
-				comments:comments,
-				subServicesData:subServicesData
+				Services: Services,
+				// video:video,
+				// image:  image ,
+				// userId:userId,
+				// comments:comments,
+				// subServicesData:subServicesData
 			})
 			await cartUser.save()
 			res.send({ success: true, message: "User Services Added To cart Successfully", data: cartUser })
