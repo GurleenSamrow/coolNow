@@ -672,11 +672,12 @@ module.exports.deleteServices = async (req, res) => {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
 }
+const bannerAdd = require("../services/bannerServices")
 module.exports.addBanner = async (req, res) => {
     try {
         const { banner_title, banner_description, active, scheduleDate, scheduleTime } = req.body;
         if (banner_title && banner_description && active, scheduleDate, scheduleTime) {
-            const image  = await uploadImage.uploadImage(req.file)
+            const image  = await bannerAdd.uploadImages(req.files)
             const bannerInfo = new banner({
                 banner_title: banner_title,
                 banner_description: banner_description,

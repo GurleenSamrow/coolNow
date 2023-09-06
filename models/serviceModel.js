@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const serviceSchema   = new Schema({
-    title:{type: String,required: true},
-	description:{type: String,required: true},
+    title:{type: String},
+	description:{type: String},
 	sub_service: [{
-		title:{type: String,required: true},
-		description:{type: String,required: true},
+		title:{type: String},
+		description:{type: String},
+		cost:{type: String},
+		image:{type: String},
 	}],
 	price: {type: String},
 	commision_margin: {type: String},
