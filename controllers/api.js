@@ -4218,3 +4218,17 @@ module.exports.userChatList= async (req, res) => {
 		res.send({ success: false, message: "Internal Server Error", data: null })
 	}
 }
+
+module.exports.addMoreCartServices = async (req, res) => {
+	try {
+		const {Services,_id} = req.body;
+	   const updatedService = await cartModel.findByIdAndUpdate(
+			_id,
+			{ $push: { Services: Services } },
+			{ new: true } 
+		  );
+		 res.send({ success: true, message: "User Added To More cart Successfully", data: updatedService })
+	} catch (err) {
+		res.send({ success: false, message: "Internal Server Error", data: null })
+	}
+}

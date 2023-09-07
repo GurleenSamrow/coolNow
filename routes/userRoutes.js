@@ -52,4 +52,6 @@ module.exports = function(app) {
 	app.post('/updateCart',require('../controllers/api').updateCart);
 	app.post('/userChatList',require('../controllers/api').userChatList);
 	app.post('/uploadVideo', upload.fields([{ name: 'image' }, { name: 'video' }]),require('../controllers/api').uploadImage)
+	app.post('/addMoreCartServices',require('../controllers/api').addMoreCartServices);
+
 }; 
