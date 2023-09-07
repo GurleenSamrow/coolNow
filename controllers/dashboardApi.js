@@ -727,7 +727,7 @@ module.exports.updatedBanner = async (req, res) => {
 //addServices.................
 module.exports.addServices = async (req, res) => {
     try {
-        const { title, description, sub_service, price, commision_margin, commision_amount, cost, status } = req.body;
+        const { title,images, description, sub_service, price, commision_margin, commision_amount, cost, status } = req.body;
         if (title && description && price && commision_margin && commision_amount && cost && status) {
            const image  = await uploadImage.uploadImage(req.file)
             const ServicesInfo = new services({
@@ -739,7 +739,8 @@ module.exports.addServices = async (req, res) => {
                 commision_amount: commision_amount,
                 cost: cost,
                 icon: image,
-                status: status
+                status: status,
+                images:images
             })
             await ServicesInfo.save()
             res.status(201).send({ success: true, message: "Service Add Successfully", data: ServicesInfo })
