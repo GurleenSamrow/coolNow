@@ -1,5 +1,6 @@
 var mongoose = require('../node_modules/mongoose');
 const userServices = require("../models/userServicesModel.js");
+const servicesModel = require("../models/serviceModel.js");
 var Config = require('../config/config');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
@@ -13,6 +14,9 @@ const response = require('../services/response')
 const services = require('../models/dashboardModel/services');
 const ratting = require('../models/ratingModel');
 const appointmentModel = require('../models/appointment')
+const cartModel = require('../models/cartModel')
+const chatModel = require('../models/chat')
+const uploadImage = require('../services/s3Services')
 
 const twilio = require('twilio');
 const accountSid = 'AC4cba3e5ee1ef9d47b9403c8cfc7587a2'; // Your Account SID from www.twilio.com/console
@@ -3418,65 +3422,85 @@ try{
         });
     },
 
-	uploadProfilePhoto: function(req, res, next){ console.log("uploadProfilePhoto");
+	uploadProfilePhoto: async function(req, res, next){ 
 	try{
-		var post = req.body;
-		//console.log(post)
-		
-		var userId = (post.user_id) ? mongoose.Types.ObjectId(post.user_id) : ""; 
-		var userType = (post.user_type) ? post.user_type : "";
-		var fileLength = (req.files) ? req.files.length : 0;
-        if(!userId || !userType || fileLength <=0) {
-            res.json({
-                error: true,
-                message: "Required parameters missing!",
-				responseCode: 0
-            });
-            res.end();
-            return;
-        }
-		
-		if(userType == 'T'){
-			var base_folder = path.join(BASE_URL, "public/uploads/technician");
-			var site_url = SITE_PATH + "uploads/technician/";
-		} else {
-			var base_folder = path.join(BASE_URL, "public/uploads/customer");
-			var site_url = SITE_PATH + "uploads/customer/";
+		const _id = req.body.user_id;
+		if(_id){
+			const image  = await uploadImage.uploadImage(req.file)
+			const userDatas = await User.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                {
+                    $set: {
+                        profile_photo: image
+                    }
+                })
+            if (userDatas.modifiedCount == 1) {
+				const userData = await User.find({_id:_id})
+                res.send({ success: true, message: "User Profile Updated Successfully", data: userData })
+            } else {
+                res.send({ success: false, message: "User Profile  Does't Updated", data: null })
+            }
+
+		}else{
+			res.send({ success: false, message: "UserId Fields Are Required", data: null })
 		}
+		// var post = req.body;
+		// //console.log(post)
 		
-		_uploadFiles(req, base_folder, function (succeeded, failed) {
-			if (!succeeded.length) {
-				var message = "Something went wrong to upload profile image.";
-				var err_msg = JSON.stringify(makeMongooseErrorMsgArray(err));
-				cb(false, message, err_msg);
-			} else {
-				var updateInfo = { profile_photo: succeeded[0] }
-				var conditions = { _id: userId };
-				User.findOneAndUpdate(conditions, {"$set": updateInfo}, {new: true}, function(err, user){
-					if(err || !user){
-						res.json({
-							error: true,
-							message: "Something went wrong to update profile photo "+JSON.stringify(err),
-							responseCode: 0
-						});
-						res.end();
-						return;       
-					} else {
-						res.json({
-							error: false,
-							message: "Photo updated successfully",
-							result:{
-								'image_name':succeeded[0],
-								'image_path':site_url+succeeded[0]
-							},
-							responseCode: 1
-						});
-						res.end();
-						return;
-					}
-				});
-			}
-		});
+		// var userId = (post.user_id) ? mongoose.Types.ObjectId(post.user_id) : ""; 
+		// var userType = (post.user_type) ? post.user_type : "";
+		// var fileLength = (req.files) ? req.files.length : 0;
+        // if(!userId || !userType || fileLength <=0) {
+        //     res.json({
+        //         error: true,
+        //         message: "Required parameters missing!",
+		// 		responseCode: 0
+        //     });
+        //     res.end();
+        //     return;
+        // }
+		
+		// if(userType == 'T'){
+		// 	var base_folder = path.join(BASE_URL, "public/uploads/technician");
+		// 	var site_url = SITE_PATH + "uploads/technician/";
+		// } else {
+		// 	var base_folder = path.join(BASE_URL, "public/uploads/customer");
+		// 	var site_url = SITE_PATH + "uploads/customer/";
+		// }
+		
+		// _uploadFiles(req, base_folder, function (succeeded, failed) {
+		// 	if (!succeeded.length) {
+		// 		var message = "Something went wrong to upload profile image.";
+		// 		var err_msg = JSON.stringify(makeMongooseErrorMsgArray(err));
+		// 		cb(false, message, err_msg);
+		// 	} else {
+		// 		var updateInfo = { profile_photo: succeeded[0] }
+		// 		var conditions = { _id: userId };
+		// 		User.findOneAndUpdate(conditions, {"$set": updateInfo}, {new: true}, function(err, user){
+		// 			if(err || !user){
+		// 				res.json({
+		// 					error: true,
+		// 					message: "Something went wrong to update profile photo "+JSON.stringify(err),
+		// 					responseCode: 0
+		// 				});
+		// 				res.end();
+		// 				return;       
+		// 			} else {
+		// 				res.json({
+		// 					error: false,
+		// 					message: "Photo updated successfully",
+		// 					result:{
+		// 						'image_name':succeeded[0],
+		// 						'image_path':site_url+succeeded[0]
+		// 					},
+		// 					responseCode: 1
+		// 				});
+		// 				res.end();
+		// 				return;
+		// 			}
+		// 		});
+		// 	}
+		// });
 	}catch(err){
 		response.success=false,
 		response.message="Internal Server Error",
@@ -3838,14 +3862,16 @@ try{
 	//selectServicesByUsers.............................
 	module.exports.selectServices = async (req, res) => {
 		try {
-			const { servicesId, numberOfunits, video,image,comments } = req.body;
-			if (servicesId && numberOfunits) {
+			const { servicesId, numberOfunits,video,comments,userId } = req.body;
+			if (servicesId && numberOfunits && userId) {
+				const image  = await uploadImage.uploadImage(req.file)
 				const servicesUser = new userServices({
 					servicesId: servicesId,
 					numberOfunits: numberOfunits,
 					video:video,
 					image:  image ,
-					comments:comments
+					comments:comments,
+					userId:userId
 				})
 				await servicesUser.save()
 				res.send({ success: true, message: "User Services Added Successfully", data: servicesUser })
@@ -3909,19 +3935,19 @@ try{
 	//homepage
 module.exports.homepageDetails = async (req, res) => {
     try {
-        const currentDate = new Date();
-        const startOfDay = new Date(currentDate);
+        var currentDate = new Date();
+        var startOfDay = new Date(currentDate);
         startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date(currentDate);
         endOfDay.setHours(23, 59, 59, 999);
         const { userId } = req.params;
 		const userData= await appointmentModel.find({user_id: userId })
 		if(userData.length > 0){
-        const cancelBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "cancelled" }] })
-		const pendingBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "pending" }] })
-	    const completedBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "completed" }] })
-        const todayBooking = await appointmentModel.find({ $and:[{ user_id: userId},{created_at: {$gte: startOfDay,$lte: endOfDay}}]})
-		const performance = await ratting.find({ user_id: userId})
+			var cancelBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "cancelled" }] })
+			var pendingBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "pending" }] })
+			var completedBooking = await appointmentModel.find({ $and: [{ user_id: userId }, { status: "completed" }] })
+			var todayBooking = await appointmentModel.find({ $and:[{ user_id: userId},{created_at: {$gte: startOfDay,$lte: endOfDay}}]})
+			var performance = await ratting.find({ user_id: userId})
        const data ={
 		totalTodayJobs:todayBooking.length,
 		totalCancelJobs:cancelBooking.length,
@@ -3929,6 +3955,7 @@ module.exports.homepageDetails = async (req, res) => {
 		totalCompletedJobs:completedBooking.length,
 		totalPerformance:performance[0].value,
 		payment:"00",
+		tipReceived:"00",
 		todayBooking:todayBooking,
 		pendingBooking:pendingBooking,
 		cancelBooking:cancelBooking,
@@ -3937,7 +3964,16 @@ module.exports.homepageDetails = async (req, res) => {
 	   }
 	res.send({ success: true, message: "Data Found successfully", data: data })
 	}else{
-		res.send({ success: false, message: "User Not Found", data: null })
+     const data ={
+			totalTodayJobs:"00",
+			totalCancelJobs:"00",
+			totalPendingJobs:"00",
+			totalCompletedJobs:"00",
+			totalPerformance:"00",
+			payment:"00",
+			tipReceived:"00",
+	 }
+		res.send({ success: false, message: "Data Found Successfully", data: data })
 	}
 		
     } catch (err) {
@@ -3993,4 +4029,206 @@ module.exports.SignupUserSendOtp=(req, res)=>{
 	response.data =null,
 	res.send(500).json(response)
 }
+}
+
+
+
+//addToCart
+module.exports.addCartServices = async (req, res) => {
+	try {
+		const {Services} = req.body;
+		if (Services) {
+			const cartUser = new cartModel({
+				Services: Services,
+				// video:video,
+				// image:  image ,
+				// userId:userId,
+				// comments:comments,
+				// subServicesData:subServicesData
+			})
+			await cartUser.save()
+			res.send({ success: true, message: "User Services Added To cart Successfully", data: cartUser })
+		} else {
+			res.send({ success: false, message: "ServicesId ,userId And NumberOfunits Fields Are Required", data: null })
+		}
+	} catch (err) {
+		res.send({ success: false, message: "Internal Server Error", data: null })
+	}
+}
+
+//GetAllcart
+// const mongoose = require('mongoose');
+module.exports.getCart= async (req, res) => {
+	try {
+		const { userId } = req.params;
+		const data = await cartModel.aggregate([
+			{
+			  $lookup: {
+				from: "services",
+				localField: "Services.servicesId",
+				foreignField: "_id",
+				as: "servicesData"
+			  }
+			},
+            {
+			  $project: {
+				"servicesData.sub_service": 0,
+			  }
+			},
+			{
+				$match: {
+				  "Services.userId": mongoose.Types.ObjectId(userId)
+				}
+			  }
+		  ]);
+		//const servicesData = await servicesModel.find({_id:data.Services[0].servicesId})
+	if (data) {
+			res.send({ success: true, message: "Get All Cart List  Successfully", data: data })
+		} else {
+			res.send({ success: true, message: "Not Found Cart", data: null })
+		}
+	} catch (err) {
+		res.send({ success: false, message: "Internal Server Error", data: null })
+	}
+}
+
+//remove to cart 
+
+module.exports.removeCart = async (req, res) => {
+    try {
+        const { _id } = req.params;
+
+const documentIdToDeleteFrom =_id; 
+const subServiceIdToDelete = "64f869a39ed1cfd86e79c228"; 
+
+const deleteData = await cartModel.updateOne(
+  { _id: documentIdToDeleteFrom },
+  { $pull: { "Services": { _id: subServiceIdToDelete } } }
+);
+
+		// const deleteData = await cartModel.updateOne(
+		// 	{
+		// 	  _id: "64f869a39ed1cfd86e79c227", 
+		// 	  "Services.userId": "6496bcb1b5a045ed8b02239b",
+		// 	  "Services.servicesId": "6896bcb1b5a045ed8b02239b"
+		// 	},
+		// 	{
+		// 	  $pull: {
+		// 		"Services.$.subServicesData": { _id: "64f869a39ed1cfd86e79c229" }
+		// 	  }
+		// 	}
+		//   );
+if (deleteData) {
+    res.send({ success: true, message: "Cart remove  Successfully", data: deleteData })
+        } else {
+            res.send({ success: false, message: "Cart Does't Remove", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+module.exports.updateCart = async (req, res) => {
+    try {
+		const {_id,numberOfunits, video,image,comments } = req.body;
+            const Data = await cartModel.updateOne(
+                { _id: mongoose.Types.ObjectId(_id) },
+                {
+                    $set: {
+                        numberOfunits: numberOfunits,
+                        video: video,
+                        image: image,
+                        comments: comments,
+                    }
+                }
+            );
+            if (Data.modifiedCount === 1) {
+				const resData = await cartModel.find({_id:_id})
+                res.send({ success: true, message: "Cart Updated Successfully", data: resData })
+            } else {
+                res.send({ success: false, message: "Cart Don't Updated", data: null })
+            }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//uploadImageAndVideo...........
+const videoUpload = require('../services/s3VideoServices')
+module.exports.uploadImage = async (req, res) => {
+    try {
+		const data = await  videoUpload.uploadImageAndVideo(req.files)
+		if(data){
+			res.send({ success: true, message: "File Upload Successfully", data: data })
+		}else{
+			res.send({ success: false, message: "Something Went Wrong", data: null })
+		}
+		
+	} catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//chatList........
+module.exports.userChatList= async (req, res) => {
+	try {
+		const { sender_id,receiver_id } = req.body;
+		const data = await chatModel.aggregate([
+			{
+			  $match: {
+				$or: [
+				  { sender_id: sender_id, receiver_id: receiver_id },
+				  { sender_id: receiver_id, receiver_id: sender_id },
+				],
+			  },
+			},
+			{
+			  $sort: { createdAt: -1 }, 
+			},
+			{
+			  $group: {
+				_id: {
+				  sender_id: sender_id,
+				  receiver_id: receiver_id,
+				},
+				latestMessage: { $first: '$message' }, 
+				createdAt: { $first: '$createdAt' }, 
+			  },
+			},
+			{
+			  $project: {
+				_id: 0, 
+				sender_id: '$_id.sender_id',
+				receiver_id: '$_id.receiver_id',
+				latestMessage: 1,
+				createdAt: 1,
+			  },
+			},
+			{
+			  $sort: { createdAt: -1 }, 
+			},
+		  ]);
+		  
+		if (data.length > 0) {
+			res.send({ success: true, message: "Data Found  Successfully", data: data })
+		} else {
+			res.send({ success: true, message: "Not Found Data", data: null })
+		}
+	} catch (err) {
+		res.send({ success: false, message: "Internal Server Error", data: null })
+	}
+}
+
+module.exports.addMoreCartServices = async (req, res) => {
+	try {
+		const {Services,_id} = req.body;
+	   const updatedService = await cartModel.findByIdAndUpdate(
+			_id,
+			{ $push: { Services: Services } },
+			{ new: true } 
+		  );
+		 res.send({ success: true, message: "User Added To More cart Successfully", data: updatedService })
+	} catch (err) {
+		res.send({ success: false, message: "Internal Server Error", data: null })
+	}
 }

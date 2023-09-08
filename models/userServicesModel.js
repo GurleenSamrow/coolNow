@@ -5,6 +5,10 @@ const userServicesSchema   = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'service',
     },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user',
+    },
     numberOfunits: {type: String},
     video: {type: String},
     image: {type: String},

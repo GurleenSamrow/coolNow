@@ -1,4 +1,4 @@
-
+const {upload} = require('../services/multerServices')
 module.exports = function (app) {
     const dashboardController = require('../controllers/dashboardApi');
 
@@ -47,9 +47,8 @@ module.exports = function (app) {
     app.get('/GetManualBookingDetails', dashboardController.getyByIdManualbooking);
 
 
-
-    //Services..................................
-    app.post('/addServices', dashboardController.addServices);
+//Services..................................
+    app.post('/addServices',upload.single('image'),dashboardController.addServices);
     app.post('/updateServices', dashboardController.updatedServices);
     app.get('/GetAllServices', dashboardController.getAllServices);
     app.post('/deleteServices', dashboardController.deleteServices);
@@ -57,7 +56,7 @@ module.exports = function (app) {
 
 
     //Banner..................................
-    app.post('/addBanner', dashboardController.addBanner);
+    app.post('/addBanner',upload.single('image'),dashboardController.addBanner);
     app.post('/updatebanner', dashboardController.updatedBanner);
     app.get('/GetAllBanner', dashboardController.getAllBanner);
     app.post('/deleteBanner', dashboardController.deleteBanner);
@@ -111,6 +110,7 @@ module.exports = function (app) {
     app.post('/appointments/:_id/reschedule', dashboardController.userAppointmentsReschedule);
     app.post('/updateBookingStatus/:_id',dashboardController.updatedBookingStatus);
     app.get('/bookingDetails/:_id', dashboardController.bookingDetails);
+    app.get('/getAllbooking', dashboardController.getAllbooking);
 
 
     //pacakage

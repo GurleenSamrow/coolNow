@@ -10,8 +10,7 @@
       required: false
     },
     banner_image: {
-      type: String,
-      required: true
+      type: Array,
     },
     active: {
       type: Boolean,

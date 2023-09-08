@@ -11,7 +11,6 @@
       },
       banner_image: {
         type: String,
-        required: true
       },
       active: {
         type: Boolean,

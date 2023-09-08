@@ -1,7 +1,8 @@
-
+const {upload} = require('../services/multerServices')
 module.exports = function(app) {
 	const ServiceController      = require('../controllers/serviceController');
 	const { uploadSingle }    = require('../helpers/uploader.helper');
+	
 	//Common 
 	app.post('/users_logout',require('../controllers/api').logOut);
 	app.get('/test',require('../controllers/api').test);
@@ -33,18 +34,24 @@ module.exports = function(app) {
 	app.post('/user_datewiseavailableslots',require('../controllers/api').userDatewiseAvailableSlots);
 	app.post('/user_monthavailableslotsdays',require('../controllers/api').userMonthAvailableSlotsDays);
 	app.post('/user_checkpromocode',require('../controllers/api').userCheckPromoCode);
-	app.post('/user_uploadprofilephoto', require('../controllers/api').uploadProfilePhoto);
+	app.post('/user_uploadprofilephoto',upload.single('image'),require('../controllers/api').uploadProfilePhoto);
 	app.get('/user_chatlist/:id', require('../controllers/api').usersChatList);
 	//app.post('/user_payment', require('../controllers/api').userPayment);
 	
 	app.get('/servicelist',require('../controllers/api').getServiceList);
 	app.get('/packagelist',require('../controllers/api').getPackageList);
 //NewRoutes
-	app.post('/userServices',require('../controllers/api').selectServices);
+	app.post('/userServices',upload.single('image'),require('../controllers/api').selectServices);
 	app.delete('/userDeleteServices',require('../controllers/api').deleteServices);
 	app.post('/addRatting',require('../controllers/api').addRatting);
 	app.get('/getRatting/:technicianId',require('../controllers/api').getRatting);
 	app.get('/technicianHomepage/:userId',require('../controllers/api').homepageDetails);
-	
+	app.post('/addCart',require('../controllers/api').addCartServices);
+	app.get('/getCart/:userId',require('../controllers/api').getCart);
+    app.delete('/removeTocart/:_id',require('../controllers/api').removeCart);
+	app.post('/updateCart',require('../controllers/api').updateCart);
+	app.post('/userChatList',require('../controllers/api').userChatList);
+	app.post('/uploadVideo', upload.fields([{ name: 'image' }, { name: 'video' }]),require('../controllers/api').uploadImage)
+	app.post('/addMoreCartServices',require('../controllers/api').addMoreCartServices);
 
 }; 
