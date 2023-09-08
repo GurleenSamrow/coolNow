@@ -46,10 +46,10 @@ module.exports = function(app) {
 	app.post('/addRatting',require('../controllers/api').addRatting);
 	app.get('/getRatting/:technicianId',require('../controllers/api').getRatting);
 	app.get('/technicianHomepage/:userId',require('../controllers/api').homepageDetails);
-	app.post('/addCart',require('../controllers/api').addCartServices);
-	app.get('/getCart/:userId',require('../controllers/api').getCart);
-    app.delete('/removeTocart/:_id',require('../controllers/api').removeCart);
-	app.post('/updateCart',require('../controllers/api').updateCart);
+	app.post('/cart',require('../controllers/api').addCartServices);
+	app.get('/cart/:userId',require('../controllers/api').getCart);
+	app.post('/cart/:_id',require('../controllers/api').updateCart);
+	app.delete('/cart/:_id',require('../controllers/api').removeCart);
 	app.post('/userChatList',require('../controllers/api').userChatList);
 	app.post('/uploadVideo', upload.fields([{ name: 'image' }, { name: 'video' }]),require('../controllers/api').uploadImage)
 	app.post('/addMoreCartServices',require('../controllers/api').addMoreCartServices);
