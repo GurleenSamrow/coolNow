@@ -57,6 +57,35 @@ function daysInMonth (month, year) {
     return new Date(year, month, 0).getDate();
 }
 
+const addOrUpdateCart = async (body) => {
+	//CHeck if the user item aleready exist...
+	const existingItem = await cartModel.findOne({
+		servicesId: body.servicesId,
+		subServicesId: body.subServicesId,
+		userId : body.userId,
+	});
+
+	if(existingItem && existingItem._id){
+		const update = await cartModel.updateOne(
+			{ _id: existingItem._id },
+			{
+				$set: {
+					numberOfunits: parseInt(existingItem.numberOfunits) + parseInt(body.numberOfunits),
+					video: (body.video) ? body.video : existingItem.video,
+					image: (body.image) ? body.image : existingItem.image,
+					comments: (body.comments) ? body.comments : existingItem.comments,
+				}
+			}
+		);
+		var cartUser = await cartModel.findById(existingItem._id);
+	}else{
+		var cartUser = new cartModel(body)
+		await cartUser.save()
+	} 
+
+	return cartUser;
+}
+
 module.exports = {
 
     usersLogin:  function(req, res, next){ 
@@ -4023,66 +4052,65 @@ module.exports.SignupUserSendOtp=(req, res)=>{
 			});
 			res.end();
 			return;
-}catch(err){
-	response.success=false,
-	response.message="Internal Server Error",
-	response.data =null,
-	res.send(500).json(response)
+	}catch(err){
+		response.success=false,
+		response.message="Internal Server Error",
+		response.data =null,
+		res.send(500).json(response)
+	}
 }
-}
-
-
-
+ 
 //addToCart
 module.exports.addCartServices = async (req, res) => {
 	try {
-		const {Services} = req.body;
-		if (Services) {
-			const cartUser = new cartModel({
-				Services: Services,
-				// video:video,
-				// image:  image ,
-				// userId:userId,
-				// comments:comments,
-				// subServicesData:subServicesData
-			})
-			await cartUser.save()
-			res.send({ success: true, message: "User Services Added To cart Successfully", data: cartUser })
+		const {body} = req;
+		if (body.servicesId && body.subServicesId && body.userId && body.numberOfunits) {
+			//Find the sub service details..
+			var servicesData = await servicesModel.findOne({"sub_service._id" : mongoose.Types.ObjectId(body.subServicesId)});
+			if(servicesData && servicesData.id == body.servicesId){
+				var sub_service_main = {};
+				servicesData.sub_service.forEach(function (sub_service, index) {
+					if(sub_service.id == body.subServicesId){
+						sub_service_main = sub_service;
+					}
+				})
+				body.cost = (sub_service_main.cost) ? sub_service_main.cost :  servicesData.cost;
+				body.title = servicesData.title;
+				
+				var cartUser = await addOrUpdateCart(body);
+
+				res.send({ success: true, message: "User Services Added To cart Successfully", data: cartUser })
+			}else{
+				res.send({ success: false, message: "Service details not found!", data: null })
+			}
 		} else {
-			res.send({ success: false, message: "ServicesId ,userId And NumberOfunits Fields Are Required", data: null })
+			res.send({ success: false, message: "servicesId, subServicesId, userId and numberOfunits Fields Are Required", data: null })
 		}
 	} catch (err) {
-		res.send({ success: false, message: "Internal Server Error", data: null })
+		res.send({ success: false, message: "Internal Server Error", data: err })
 	}
 }
 
 //GetAllcart
-// const mongoose = require('mongoose');
 module.exports.getCart= async (req, res) => {
 	try {
 		const { userId } = req.params;
 		const data = await cartModel.aggregate([
-			{
-			  $lookup: {
-				from: "services",
-				localField: "Services.servicesId",
-				foreignField: "_id",
-				as: "servicesData"
-			  }
-			},
-            {
-			  $project: {
-				"servicesData.sub_service": 0,
-			  }
-			},
+			// {
+			//   $lookup: {
+			// 	from: "services",
+			// 	localField: "servicesId",
+			// 	foreignField: "_id",
+			// 	as: "servicesData"
+			//   }
+			// },
 			{
 				$match: {
-				  "Services.userId": mongoose.Types.ObjectId(userId)
+				  "userId": mongoose.Types.ObjectId(userId)
 				}
-			  }
-		  ]);
-		//const servicesData = await servicesModel.find({_id:data.Services[0].servicesId})
-	if (data) {
+			}
+		]);
+ 		if (data) {
 			res.send({ success: true, message: "Get All Cart List  Successfully", data: data })
 		} else {
 			res.send({ success: true, message: "Not Found Cart", data: null })
@@ -4093,61 +4121,54 @@ module.exports.getCart= async (req, res) => {
 }
 
 //remove to cart 
-
 module.exports.removeCart = async (req, res) => {
-    try {
-        const { _id } = req.params;
-
-const documentIdToDeleteFrom =_id; 
-const subServiceIdToDelete = "64f869a39ed1cfd86e79c228"; 
-
-const deleteData = await cartModel.updateOne(
-  { _id: documentIdToDeleteFrom },
-  { $pull: { "Services": { _id: subServiceIdToDelete } } }
-);
-
-		// const deleteData = await cartModel.updateOne(
-		// 	{
-		// 	  _id: "64f869a39ed1cfd86e79c227", 
-		// 	  "Services.userId": "6496bcb1b5a045ed8b02239b",
-		// 	  "Services.servicesId": "6896bcb1b5a045ed8b02239b"
-		// 	},
-		// 	{
-		// 	  $pull: {
-		// 		"Services.$.subServicesData": { _id: "64f869a39ed1cfd86e79c229" }
-		// 	  }
-		// 	}
-		//   );
-if (deleteData) {
-    res.send({ success: true, message: "Cart remove  Successfully", data: deleteData })
-        } else {
-            res.send({ success: false, message: "Cart Does't Remove", data: null })
-        }
-    } catch (err) {
-        res.send({ success: false, message: "Internal Server Error", data: null })
-    }
+	try {
+		const { _id } = req.params;
+		const deleteData = await cartModel.findByIdAndDelete(_id)
+		if (deleteData) {
+			res.send({ success: true, message: "Cart item deleted successfully!", data: deleteData })
+		} else {
+			res.send({ success: false, message: "Item not found or the item was already deleted!", data: null })
+		}
+	} catch (err) {
+		res.send({ success: false, message: "Internal Server Error", data: null })
+	} 
 }
 
+//Update cart...
 module.exports.updateCart = async (req, res) => {
     try {
-		const {_id,numberOfunits, video,image,comments } = req.body;
-            const Data = await cartModel.updateOne(
-                { _id: mongoose.Types.ObjectId(_id) },
-                {
-                    $set: {
-                        numberOfunits: numberOfunits,
-                        video: video,
-                        image: image,
-                        comments: comments,
-                    }
-                }
-            );
-            if (Data.modifiedCount === 1) {
-				const resData = await cartModel.find({_id:_id})
-                res.send({ success: true, message: "Cart Updated Successfully", data: resData })
-            } else {
-                res.send({ success: false, message: "Cart Don't Updated", data: null })
-            }
+		const { body } = req;
+		const { _id } = req.params;
+		if (_id && body.numberOfunits) {
+			//CHeck if the user cart aleready exist...
+			const existingItem = await cartModel.findById(_id);
+
+			if(existingItem && existingItem._id){
+				const update = await cartModel.updateOne(
+					{ _id: existingItem._id },
+					{
+						$set: {
+							numberOfunits:  (body.numberOfunits) ? body.numberOfunits : existingItem.numberOfunits,
+							video: (body.video) ? body.video : existingItem.video,
+							image: (body.image) ? body.image : existingItem.image,
+							comments: (body.comments) ? body.comments : existingItem.comments,
+						}
+					}
+				);
+				if (update.modifiedCount === 1) {
+					var cartUser = await cartModel.findById(_id);
+					res.send({ success: true, message: "Cart Updated Successfully", data: cartUser })
+				} else {
+					res.send({ success: false, message: "Nothing to update", data: null })
+				}
+			}else{
+				res.send({ success: false, message: "Cart details not found!", data: null })
+			}
+		}else{
+			res.send({ success: false, message: "_id and numberOfunits Fields Are Required", data: null })
+
+		}
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }

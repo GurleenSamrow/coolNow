@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const userCartSchema   = new Schema({
-    Services: [{
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
@@ -10,18 +9,28 @@ const userCartSchema   = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'service',
     },
-    subServicesData: [{
-		title:{type: String},
-		description:{type: String},
-		cost:{type: String},
-		image:{type: String},
-        numberOfunits:{type: String},
-        video: {type: String},
-        comment: {type: String},
-	}],
-}]
-   
-   
+    subServicesId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'service.sub_service',
+    },
+    title: {
+        type: String
+    },
+    cost: {
+        type: String
+    },
+    numberOfunits: {
+        type: String
+    },
+    image: {
+        type: String
+    },
+    video: {
+        type: String
+    },
+    comments: {
+        type: String
+    }
 },
 {timestamps: true});
 
