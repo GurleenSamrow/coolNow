@@ -4064,30 +4064,54 @@ module.exports.SignupUserSendOtp=(req, res)=>{
 module.exports.addCartServices = async (req, res) => {
 	try {
 		const {body} = req;
-		if (body.servicesId && body.subServicesId && body.userId && body.numberOfunits) {
-			//Find the sub service details..
-			var servicesData = await servicesModel.findOne({"sub_service._id" : mongoose.Types.ObjectId(body.subServicesId)});
-			if(servicesData && servicesData.id == body.servicesId){
-				var sub_service_main = {};
-				servicesData.sub_service.forEach(function (sub_service, index) {
-					if(sub_service.id == body.subServicesId){
-						sub_service_main = sub_service;
+		//validate data..
+		var items = [];
+		var response = null;
+		await Promise.all(body.map(async (item, index) => {
+			if(!response){
+				if (item.servicesId && item.subServicesId && item.userId && item.numberOfunits) {
+					//Find the sub service details..
+					var servicesData = await servicesModel.findOne({"sub_service._id" : mongoose.Types.ObjectId(item.subServicesId)});
+					if(servicesData && servicesData.id == item.servicesId){
+						var sub_service_main = {};
+						await  servicesData.sub_service.forEach(function (sub_service, index1) {
+							if(sub_service.id == item.subServicesId){
+								sub_service_main = sub_service;
+							}
+						})
+						item.cost = (sub_service_main.cost) ? sub_service_main.cost :  servicesData.cost;
+						item.title = servicesData.title;
+						
+						items.push(item);
+	
+					}else{
+						response = { success: false, message: "Service details not found!", data: item };
 					}
-				})
-				body.cost = (sub_service_main.cost) ? sub_service_main.cost :  servicesData.cost;
-				body.title = servicesData.title;
-				
-				var cartUser = await addOrUpdateCart(body);
-
-				res.send({ success: true, message: "User Services Added To cart Successfully", data: cartUser })
-			}else{
-				res.send({ success: false, message: "Service details not found!", data: null })
+				} else {
+					response = { success: false, message: "servicesId, subServicesId, userId and numberOfunits Fields Are Required", data: item };
+				}
 			}
-		} else {
-			res.send({ success: false, message: "servicesId, subServicesId, userId and numberOfunits Fields Are Required", data: null })
+		}));
+ 
+		if(response){
+			res.send(response)
+		}else{
+			var responses = [];
+			if(items.length > 0){
+				await Promise.all(items.map(async (item, index) => {
+					var cartUser = await addOrUpdateCart(item);
+					responses.push(cartUser);
+				}));
+
+				res.send({ success: true, message: "User Services Added To cart Successfully", data: responses })
+
+			}else{
+				res.send({ success: false, message: "servicesId, subServicesId, userId and numberOfunits Fields Are Required", data: null })
+			}
 		}
+
 	} catch (err) {
-		res.send({ success: false, message: "Internal Server Error", data: err })
+		res.send({ success: false, message: "Internal Server Error", data: null })
 	}
 }
 
@@ -4139,36 +4163,40 @@ module.exports.removeCart = async (req, res) => {
 module.exports.updateCart = async (req, res) => {
     try {
 		const { body } = req;
-		const { _id } = req.params;
-		if (_id && body.numberOfunits) {
-			//CHeck if the user cart aleready exist...
-			const existingItem = await cartModel.findById(_id);
+		var items = [];
+		var response = {};
+		var response1 = null;
+		await Promise.all(body.map(async (item, index) => {
+			if(!response1){
+				if (item._id && item.numberOfunits) {
+					//CHeck if the user cart aleready exist...
+					const existingItem = await cartModel.findById(item._id);
 
-			if(existingItem && existingItem._id){
-				const update = await cartModel.updateOne(
-					{ _id: existingItem._id },
-					{
-						$set: {
-							numberOfunits:  (body.numberOfunits) ? body.numberOfunits : existingItem.numberOfunits,
-							video: (body.video) ? body.video : existingItem.video,
-							image: (body.image) ? body.image : existingItem.image,
-							comments: (body.comments) ? body.comments : existingItem.comments,
-						}
+					if(existingItem && existingItem._id){
+						var update = await cartModel.updateOne(
+							{ _id: existingItem._id },
+							{
+								$set: {
+									numberOfunits:  (item.numberOfunits) ? item.numberOfunits : existingItem.numberOfunits,
+									video: (item.video) ? item.video : existingItem.video,
+									image: (item.image) ? item.image : existingItem.image,
+									comments: (item.comments) ? item.comments : existingItem.comments,
+								}
+							}
+						);
+						
+						response = { success: true, message: "Cart Updated Successfully", data: null };
+					}else{
+						response1 = { success: false, message: "Cart details not found!", data: item };
 					}
-				);
-				if (update.modifiedCount === 1) {
-					var cartUser = await cartModel.findById(_id);
-					res.send({ success: true, message: "Cart Updated Successfully", data: cartUser })
-				} else {
-					res.send({ success: false, message: "Nothing to update", data: null })
+				}else{
+					response1 = { success: false, message: "_id and numberOfunits Fields Are Required", data: item };
 				}
-			}else{
-				res.send({ success: false, message: "Cart details not found!", data: null })
 			}
-		}else{
-			res.send({ success: false, message: "_id and numberOfunits Fields Are Required", data: null })
+		}));
+  
+		res.send((response1) ? response1 : response);
 
-		}
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
