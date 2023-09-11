@@ -4164,7 +4164,8 @@ module.exports.updateCart = async (req, res) => {
     try {
 		const { body } = req;
 		var items = [];
-		var response = {};
+		var userID = null;
+		var response = null;
 		var response1 = null;
 		await Promise.all(body.map(async (item, index) => {
 			if(!response1){
@@ -4173,6 +4174,9 @@ module.exports.updateCart = async (req, res) => {
 					const existingItem = await cartModel.findById(item._id);
 
 					if(existingItem && existingItem._id){
+
+						userID = existingItem.userId;
+
 						var update = await cartModel.updateOne(
 							{ _id: existingItem._id },
 							{
@@ -4194,11 +4198,21 @@ module.exports.updateCart = async (req, res) => {
 				}
 			}
 		}));
+
+		if(response && response.success == true){
+			response.data = await cartModel.aggregate([
+				{
+					$match: {
+					  "userId": userID
+					}
+				}
+			]);
+		}
   
 		res.send((response1) ? response1 : response);
 
     } catch (err) {
-        res.send({ success: false, message: "Internal Server Error", data: null })
+        res.send({ success: false, message: "Internal Server Error", data: err })
     }
 }
 
