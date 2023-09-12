@@ -20,7 +20,9 @@ const bodyParser = require('body-parser')
 
 var app = express();
 //useCors
-app.use(cors());
+app.use(cors({
+    methods: ['GET','POST','DELETE','UPDATE','PUT','PATCH']
+}));
 
 const server = http.createServer(app);
 const socketService = require('./services/socketServices');
