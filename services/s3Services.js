@@ -36,7 +36,7 @@ module.exports.uploadImage = (files) => {
     const file = files;
     const params = {
       Bucket: 'coolnowimage',
-      Key: file.originalname,
+      Key: `uploads/${Date.now()}_${file.originalname.replace(/\s/g, '')}`,
       Body: file.buffer,
     };
 

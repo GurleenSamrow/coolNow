@@ -672,22 +672,24 @@ module.exports.deleteServices = async (req, res) => {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
 }
-const bannerAdd = require("../services/bannerServices")
+ 
 module.exports.addBanner = async (req, res) => {
     try {
-        const { banner_title, banner_description, active, scheduleDate, scheduleTime } = req.body;
-        if (banner_title && banner_description && active, scheduleDate, scheduleTime) {
-            const image  = await uploadImage.uploadImage(req.file)
+        const { banner_title, banner_description, banner_image, active, scheduleDate, scheduleTime } = req.body;
+        if (banner_title && banner_description && banner_image && active, scheduleDate, scheduleTime) {
+
+            var scheduleTimeString = scheduleDate+" "+scheduleTime+":00";
+            var scheduleTimeFormat = moment(scheduleTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+
             const bannerInfo = new banner({
                 banner_title: banner_title,
                 banner_description: banner_description,
-                banner_image: image,
+                banner_image: banner_image,
                 active: active,
-                scheduleDate: scheduleDate,
-                scheduleTime: scheduleTime
+                scheduleDateTime: new Date(scheduleTimeFormat),
             })
             await bannerInfo.save()
-            res.send({ success: true, message: "Banner Add Successfully", data: bannerInfo })
+            res.send({ success: true, message: "Banner Added Successfully!", data: bannerInfo })
         } else {
             res.send({ success: false, message: "All Fields Are Required", data: null })
         }
@@ -695,35 +697,41 @@ module.exports.addBanner = async (req, res) => {
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
 }
+
 //updatedBanner
 module.exports.updatedBanner = async (req, res) => {
     try {
         const { banner_title, banner_description, banner_image, active, scheduleDate, scheduleTime, _id } = req.body;
         if (banner_title && banner_description && banner_image && active, scheduleDate, scheduleTime) {
+
+            var scheduleTimeString = scheduleDate+" "+scheduleTime+":00";
+            var scheduleTimeFormat = moment(scheduleTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+
             const bannerData = await banner.updateOne(
-                { _id: mongoose.Types.ObjectId(_id) },
+                { _id: _id },
                 {
                     $set: {
                         banner_title: banner_title,
                         banner_description: banner_description,
                         banner_image: banner_image,
                         active: active,
-                        scheduleDate: scheduleDate,
-                        scheduleTime: scheduleTime
+                        scheduleDateTime: new Date(scheduleTimeFormat),
                     }
                 })
             if (bannerData.modifiedCount === 1) {
-                res.send({ success: true, message: "Banner Updated Successfully", data: null })
+                const bannerData1 = await banner.findById({ _id: _id })
+                res.send({ success: true, message: "Banner Updated Successfully!", data: bannerData1 })
             } else {
-                res.send({ success: false, message: "Banner Don't Updated", data: null })
+                res.send({ success: false, message: "Nothing to update", data: null })
             }
         } else {
             res.send({ success: false, message: "All Fields Are Required", data: null })
         }
     } catch (err) {
-        res.send({ success: false, message: "Internal Server Error", data: null })
+        res.send({ success: false, message: "Internal Server Error", data: err })
     }
 }
+
 //addServices.................
 module.exports.addServices = async (req, res) => {
     try {
@@ -1910,5 +1918,54 @@ module.exports.getAllbooking = async (req, res) => {
         }
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//bookingList 
+module.exports.fileUploads = async (req, res) => {
+    try {
+        
+        var uploads = [];
+        if(req.files){
+            var fileKeys = Object.keys(req.files);
+            await Promise.all(fileKeys.map(async (fieldName, index) => {
+                if(req.files[fieldName] && req.files[fieldName].length > 0){
+                    await Promise.all(req.files[fieldName].map(async (element, index1) => {
+                        const path  = await uploadImage.uploadImage(element);
+                        uploads.push({url: path, type: path.split('.').pop()});
+                    }));
+                }
+
+            }));
+        }
+        
+        //send..
+        if(uploads.length > 0){
+            res.json({
+                success: true,
+                message: 'Files Uploaded Successfully!',
+                data: uploads,
+            });
+            res.end();
+            return;
+        }else{
+            res.json({
+                success: false,
+                message: 'No files uploaded!',
+                data: [],
+            });
+            res.end();
+            return;
+        }
+
+    } catch (err) {
+        res.status(500);
+        res.json({
+            success: false,
+            message: "Internal Server Error!",
+            mongoose_error: JSON.stringify(err),
+        });
+        res.end();
+        return;
     }
 }
