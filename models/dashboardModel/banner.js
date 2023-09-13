@@ -17,11 +17,7 @@
         required: true,
         default: true
       },
-      scheduleDate: {
-        type: Date,
-        required: true,
-      },
-      scheduleTime: {
+      scheduleDateTime: {
         type: Date,
         required: true,
       },

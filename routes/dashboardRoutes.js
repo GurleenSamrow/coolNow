@@ -1,4 +1,4 @@
-const {upload} = require('../services/multerServices')
+const {upload, multipleUploads} = require('../services/multerServices')
 module.exports = function (app) {
     const dashboardController = require('../controllers/dashboardApi');
 
@@ -57,7 +57,7 @@ module.exports = function (app) {
 
     //Banner..................................
     app.post('/addBanner',upload.single('image'),dashboardController.addBanner);
-    app.post('/updatebanner', dashboardController.updatedBanner);
+    app.post('/updateBanner', dashboardController.updatedBanner);
     app.get('/GetAllBanner', dashboardController.getAllBanner);
     app.post('/deleteBanner', dashboardController.deleteBanner);
     app.get('/GetBannerDetails', dashboardController.getyByIdbanner);
@@ -114,14 +114,14 @@ module.exports = function (app) {
 
 
     //pacakage
-
     app.post('/package', dashboardController.addPackage);
     app.put('/package/:_id', dashboardController.updatedPackage);
     app.get('/package', dashboardController.getAllPackage);
     app.get('/package/:_id', dashboardController.getPackageById);
     app.delete('/package/:_id', dashboardController.deletePackage);
 
-
+    //file uploads/..
+    app.post('/file-uploads',  multipleUploads("file"), dashboardController.fileUploads);
 
 
 };
