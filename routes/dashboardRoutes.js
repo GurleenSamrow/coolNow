@@ -47,12 +47,17 @@ module.exports = function (app) {
     app.get('/GetManualBookingDetails', dashboardController.getyByIdManualbooking);
 
 
-//Services..................................
-    app.post('/addServices',upload.single('image'),dashboardController.addServices);
-    app.post('/updateServices', dashboardController.updatedServices);
+    //Services..................................
+    app.post('/addServices', dashboardController.addServices);
     app.get('/GetAllServices', dashboardController.getAllServices);
-    app.post('/deleteServices', dashboardController.deleteServices);
     app.get('/GetServicesDetails', dashboardController.getyByIdServices);
+
+    //Services New Routes..................................
+    app.get('/services', dashboardController.getServices);
+    app.post('/services', dashboardController.addServices);
+    app.put('/services/:id', dashboardController.updatedServices);
+    app.delete('/services/:id', dashboardController.deleteServices);
+    app.get('/services/:id', dashboardController.getServicesById);
 
 
     //Banner..................................
@@ -104,7 +109,8 @@ module.exports = function (app) {
     //   Districts....
     app.get('/districts', dashboardController.getAllDistricts);
     app.post('/districts', dashboardController.addDistricts);
-  
+    app.get('/districts/locations', dashboardController.getAllDistrictsLocations);
+
     // Appointments...
     app.post('/appointments', dashboardController.userAppointments);
     app.post('/appointments/:_id/reschedule', dashboardController.userAppointmentsReschedule);

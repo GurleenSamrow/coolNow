@@ -608,42 +608,176 @@ module.exports.deleteManualBooking = async (req, res) => {
 //     }
 // }
 
-//updatedServices.....................
-module.exports.updatedServices = async (req, res) => {
-    try {
-        const { title, description, sub_service, price, commision_margin, commision_amount, cost, icon, status, _id } = req.body;
-        if (title && description && sub_service && price && commision_margin && commision_amount && cost && icon && status && _id) {
-            const servicesData = await services.updateOne(
-                { _id: mongoose.Types.ObjectId(_id) },
-                {
-                    $set: {
-                        title: title,
-                        description: description,
-                        sub_service: sub_service,
-                        price: price,
-                        commision_margin: commision_margin,
-                        commision_amount: commision_amount,
-                        cost: cost,
-                        icon: icon,
-                        status: status
-                    }
-                })
-            if (servicesData.modifiedCount === 1) {
-                res.send({ success: true, message: "Service  Updated Successfully", data: null })
+//addServices.................
+module.exports.addServices = async (req, res) => {
+    try{
+        if (!req.body) {
+            res.json({
+                success: false,
+                message: 'Form data is missing',
+                data : null
+            });
+            res.end();
+        }
+
+        var posted_data = {};
+        posted_data.title = req.body.title || "";
+        posted_data.description = req.body.description || "";
+        posted_data.image = req.body.image || "";
+        posted_data.banner_image = req.body.banner_image || ""; 
+        posted_data.cost = req.body.cost || "";
+        posted_data.price = req.body.price || ""; 
+        posted_data.duration = req.body.duration || ""; 
+        posted_data.price_2 = req.body.price_2 || "";
+        posted_data.duration_2 = req.body.duration_2 || "";
+        posted_data.commision_margin = req.body.commision_margin || "";
+        posted_data.commision_amount = req.body.commision_amount || "";
+        posted_data.sub_service = req.body.sub_service || "";
+        posted_data.status = req.body.status || "";
+        if (!posted_data.title || !posted_data.description || !posted_data.image  || !posted_data.banner_image  || !posted_data.sub_service || !posted_data.sub_service[0].title || !posted_data.sub_service[0].duration || !posted_data.sub_service[0].price) {
+            res.json({
+                success: false,
+                message: "Required parameter is missing (title|description|image|banner_image|sub_service.title|sub_service.duration|sub_service.price)",
+                data : null
+            });
+            res.end();
+            return;
+        }
+        var newService = new services(posted_data);
+        newService.save(function(errors, dbres) {
+            //console.log("errors", errors)
+            if(errors){
+                res.json({
+                    success: false,
+                    message: "Something went wrong, please try again",
+                    data : errors
+                });
+                res.end();
+                return;
             } else {
-                res.send({ success: false, message: "Service Don't Updated", data: null })
+                res.json({
+                    success: true,
+                    message: 'Service Added Successfully!',
+                    data: dbres,
+                });
+                res.end();
+                return;
             }
+        })
+    }catch(err){
+        res.status(500);
+        res.json({
+            success: false,
+            message: 'Internal Server Error',
+            data: err,
+        });
+        res.end();
+        return;
+    }
+}
+
+//getServicesById
+module.exports.getServicesById = async (req, res) => {
+    try {
+        var serviceId = mongoose.Types.ObjectId(req.params.id);
+        if (!serviceId) {
+            res.json({
+                success: false,
+                message: 'serviceId parameter is missing in URL',
+                data: null
+            });
+            res.end();
+        }
+        const servicesData = await services.findById({ _id: serviceId })
+        if (servicesData) {
+            res.send({ success: true, message: "Get Services Details Successfully", data: servicesData })
         } else {
-            res.send({ success: false, message: "All Fields Are Required", data: null })
+            res.send({ success: true, message: "Not Found Services", data: null })
         }
     } catch (err) {
-        console.log("err", err);
         res.send({ success: false, message: "Internal Server Error", data: null })
     }
 }
 
+//updatedServices.....................
+module.exports.updatedServices = async (req, res) => {
+    try {
+        var serviceId = mongoose.Types.ObjectId(req.params.id);
+        if (!serviceId) {
+            res.json({
+                success: false,
+                message: 'serviceId parameter is missing in URL',
+                data: null
+            });
+            res.end();
+        }
 
+        if (!req.body) {
+            res.json({
+                success: false,
+                message: 'Form data is missing',
+                data : null
+            });
+            res.end();
+        }
+
+        if (!req.body.title || !req.body.description || !req.body.image  || !req.body.banner_image  || !req.body.sub_service || !req.body.sub_service[0].title || !req.body.sub_service[0].duration || !req.body.sub_service[0].price) {
+            res.json({
+                success: false,
+                message: "Required parameter is missing (title|description|image|banner_image|sub_service.title|sub_service.duration|sub_service.price)",
+                data : null
+            });
+            res.end();
+            return;
+        }
+        req.body.updated_at = new Date();
+        services.findOneAndUpdate({_id: serviceId}, {"$set": req.body}, {new: false}, async function(errors, dbres){
+            //console.log("errors", errors)
+            if(errors){
+                res.json({
+                    success: false,
+                    message: "Something went wrong, please try again",
+                    data : errors
+                });
+                res.end();
+                return;
+            } else {
+                // return the information including token as JSON
+                res.json({
+                    success: true,
+                    message: (dbres ? 'Service updated successfully!' : "Nothing to update!"),
+                    data: await services.findById({ _id: serviceId }),
+                });
+                res.end();
+                return;
+            }
+        })
+    }catch(err){
+        res.status(500);
+        res.json({
+            success: false,
+            message: 'Internal Server Error',
+            data: err,
+        });
+        res.end();
+        return;
+    }
+}
+ 
 //list services.......................................
+module.exports.getServices = async (req, res) => {
+    try {
+        const servicesData = await services.find()
+        if (servicesData.length > 0) {
+            res.send({ success: true, message: "Get All Services Successfully", data: servicesData })
+        } else {
+            res.send({ success: true, message: "Not Found Services", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
 module.exports.getAllServices = async (req, res) => {
     try {
         const bannerData = await banner.find()
@@ -660,16 +794,32 @@ module.exports.getAllServices = async (req, res) => {
 }
 //deleteServices.....................................
 module.exports.deleteServices = async (req, res) => {
-    try {
-        const { _id } = req.body;
-        const servicesData = await services.findOneAndDelete({ id: _id })
-        if (servicesData) {
-            res.send({ success: true, message: "Services Delete Successfully", data: servicesData })
-        } else {
-            res.send({ success: false, message: "Services Does'nt Delete", data: null })
+    try{
+        var serviceId = mongoose.Types.ObjectId(req.params.id);
+        if (!serviceId) {
+            res.json({
+                success: false,
+                message: 'serviceId parameter is missing in URL',
+                data: null
+            });
+            res.end();
         }
-    } catch (err) {
-        res.send({ success: false, message: "Internal Server Error", data: null })
+
+        const deleteData = await services.findByIdAndDelete(serviceId);
+        if (deleteData) {
+            res.send({ success: true, message: "Service Deleted Successfully", data: deleteData })
+        } else {
+            res.send({ success: false, message: "Service Don't Deleted", data: null })
+        }
+    }catch(err){
+        res.status(500);
+        res.json({
+            success: false,
+            message: 'Internal Server Error',
+            data: err,
+        });
+        res.end();
+        return;
     }
 }
  
@@ -729,35 +879,6 @@ module.exports.updatedBanner = async (req, res) => {
         }
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: err })
-    }
-}
-
-//addServices.................
-module.exports.addServices = async (req, res) => {
-    try {
-        const { title,images, description, sub_service, price, commision_margin, commision_amount, cost, status } = req.body;
-        if (title && description && price && commision_margin && commision_amount && cost && status) {
-           const image  = await uploadImage.uploadImage(req.file)
-            const ServicesInfo = new services({
-                title: title,
-                description: description,
-                sub_service: sub_service,
-                price: price,
-                commision_margin: commision_margin,
-                commision_amount: commision_amount,
-                cost: cost,
-                icon: image,
-                status: status,
-                images:images
-            })
-            await ServicesInfo.save()
-            res.status(201).send({ success: true, message: "Service Add Successfully", data: ServicesInfo })
-        } else {
-            res.status(400).send({ success: false, message: "All Fields Are Required", data: null })
-        }
-    } catch (err) {
-        console.log("error",err);
-        res.status(500).send({ success: false, message: "Internal Server Error", data: null })
     }
 }
 
@@ -1479,6 +1600,26 @@ module.exports.getAllDistricts = async (req, res) => {
         const data = await districtModel.find()
         if (data.length > 0) {
             res.send({ success: true, message: "Get All Districts Successfully", data: data })
+        } else {
+            res.send({ success: true, message: "Not Found Districts", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+//getAllZones
+module.exports.getAllDistrictsLocations = async (req, res) => {
+    try {
+        const data = await districtModel.find()
+        if (data.length > 0) {
+            var locationArr = [];
+            data.map(function(key, value){
+                key.locations.map(function(key1, value1){
+                    locationArr.push(key1);
+                })
+            });
+            res.send({ success: true, message: "Get All District Locations Successfully", data: locationArr })
         } else {
             res.send({ success: true, message: "Not Found Districts", data: null })
         }

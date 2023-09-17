@@ -7,12 +7,22 @@
 			ref: 'user',
 			required: [true, 'user ID is required']
 		},
+		name: {
+			type: String,
+			trim: true,
+			required: false
+		}, 
 		phone: {
 			type: String,
 			trim: true,
 			required: false
-		},  
-		address: {
+		}, 
+		pincode: {
+			type: String,
+			trim: true,
+			required: true
+		}, 
+		location: {
 			type: String,
 			trim: true,
 			required: true
@@ -22,12 +32,27 @@
 			trim: true,
 			required: true
 		},
-		city: {
+		block_number: {
 			type: String,
 			trim: true,
 			required: true
 		},
-		pincode: {
+		street_number: {
+			type: String,
+			trim: true,
+			required: true
+		},
+		building_name: {
+			type: String,
+			trim: true,
+			required: true
+		},
+		floor: {
+			type: String,
+			trim: true,
+			required: true
+		},
+		unit: {
 			type: String,
 			trim: true,
 			required: true
@@ -35,12 +60,12 @@
 		lat: {
 			type: String,
 			trim: true,
-			required: true
+			required: false
 		},
 		lng: {
 			type: String,
 			trim: true,
-			required: true
+			required: false
 		},
 		user_type: {
 			type: String,
@@ -52,6 +77,16 @@
 			type: Boolean,
 			required: true,
 			default: true
+		},
+		notes: {
+			type: String,
+			trim: true,
+			required: false
+		},
+		is_primary: {
+			type: Boolean,
+			required: true,
+			default: false
 		},
 		is_deleted: {
 			type: Boolean,
