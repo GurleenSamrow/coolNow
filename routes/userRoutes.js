@@ -54,4 +54,10 @@ module.exports = function(app) {
 	app.post('/uploadVideo', upload.fields([{ name: 'image' }, { name: 'video' }]),require('../controllers/api').uploadImage)
 	app.post('/addMoreCartServices',require('../controllers/api').addMoreCartServices);
 
+
+	//User address.
+	app.get('/address/:id', require('../controllers/api').userAddressList);
+	app.post('/address', require('../controllers/api').userSaveAddress);
+	app.put('/address/:id', require('../controllers/api').updateAddress);
+	app.delete('/address/:id', require('../controllers/api').removeAddress);
 }; 

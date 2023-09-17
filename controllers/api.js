@@ -1254,48 +1254,49 @@ try{
         })
     },
 	
-	userAddressList: function (req, res, next) { //console.log("userAddressList");
+	userAddressList: function (req, res, next) {
 		try{
-		//console.log(req.params)
-        var userId = mongoose.Types.ObjectId(req.params.id);
-		if (!userId) {
-            res.json({
-                error: true,
-                message: 'Required parameter is missing',
-                responseCode: 0
-            });
-            res.end();
-        }
-		
-        var Address = helper.getModel("address");  
-        Address.find({user_id: mongoose.Types.ObjectId(userId), is_deleted: {'$ne': true}}).sort({_id: 1}).exec(function (err, results) {
-            if (err) {
+			var userId = mongoose.Types.ObjectId(req.params.id);
+			if (!userId) {
 				res.json({
-					error: true,
-					message: "Something went wrong to fetch address.",
-					mongoose_error: JSON.stringify(err),
-					responseCode: 0
+					success: false,
+					message: 'Required parameter is missing',
+					data: null
 				});
 				res.end();
-				return;
-            } else {
-                res.json({
-                    error: false,
-                    message: "Success",
-                    mongoose_error: "",
-                    responseCode: 1,
-                    userInfo: results
-                });
-                res.end();
-                return;
-            }
-        })
-	}catch(err){
-		response.success=false,
-		response.message="Internal Server Error",
-		response.data =null,
-		res.send(500).json(response)
-	}
+			}
+			
+			var Address = helper.getModel("address");  
+ 			Address.find({user_id: mongoose.Types.ObjectId(userId), is_deleted: {'$ne': true}}).sort({_id: 1}).exec(function (err, results) {
+				if (err) {
+					res.json({
+						success: false,
+						message: "Something went wrong to fetch address.",
+						mongoose_error: JSON.stringify(err),
+						data: null
+					});
+					res.end();
+					return;
+				} else {
+					res.json({
+						success: true,
+						message: "Get all addresses successfully!",
+ 						data: results
+					});
+					res.end();
+					return;
+				}
+			})
+		}catch(err){
+			res.status(500);
+			res.json({
+				success: false,
+				message: 'Internal Server Error',
+				data: null,
+			});
+			res.end();
+			return;
+		}
     },
 /**
  * @api {post} http://http://18.191.254.193/user_save_address user_save_address
@@ -1335,71 +1336,179 @@ try{
 	userSaveAddress: function(req, res, next){ //console.log('userSaveAddress'); 
 		try{
 			//console.log("REQUEST~~~", req.body);
-        if (!req.body) {
-            res.json({
-                error: true,
-                message: 'Form data is missing',
-                responseCode: 0
-            });
-            res.end();
-        }
-		
-        //var User = helper.getModel('user');
-        var posted_data = {};
-        posted_data.user_id = mongoose.Types.ObjectId(req.body.user_id) || "";
-        posted_data.name = req.body.name || "";
-		posted_data.location = req.body.location || "";
-		posted_data.phone = req.body.phone || "";
-        posted_data.address = req.body.address || "";
-		posted_data.addressType = req.body.addressType || ""; 
-		posted_data.city = req.body.city || ""; 
-		posted_data.lat = req.body.lat || "";
-		posted_data.lng = req.body.lng || "";
-		posted_data.floor = req.body.floor || ""; 
-        posted_data.pincode = req.body.pincode || "";
-        posted_data.user_type = req.body.user_type || "C";
-		if (!posted_data.user_id || !posted_data.address) {
-            res.json({
-                error: true,
-                message: "Required parameter is missing",
-                responseCode: 0
-            });
-            res.end();
-            return;
-        }
-		
-		var Address = helper.getModel('address');
-        var newAddress = new Address(posted_data);
-		
-		newAddress.save(function(errors, dbres) {
-			//console.log("errors", errors)
-			if(errors){
+			if (!req.body) {
 				res.json({
-					error: true,
-					message: "Something went wrong, please try again: "+errors,
-					responseCode: 0
+					success: false,
+					message: 'Form data is missing',
+					data : null
 				});
 				res.end();
-				return;
-			} else {
-				// return the information including token as JSON
+			}
+			
+			//var User = helper.getModel('user');
+			var posted_data = {};
+			posted_data.user_id = req.body.user_id || "";
+			posted_data.name = req.body.name || "";
+			posted_data.phone = req.body.phone || "";
+			posted_data.addressType = req.body.addressType || ""; 
+			posted_data.pincode = req.body.pincode || "";
+			posted_data.location = req.body.location || "";
+			posted_data.block_number = req.body.block_number || "";
+			posted_data.street_number = req.body.street_number || "";
+			posted_data.building_name = req.body.building_name || "";
+			posted_data.floor = req.body.floor || ""; 
+			posted_data.unit = req.body.unit || ""; 
+ 			posted_data.lat = req.body.lat || "";
+			posted_data.lng = req.body.lng || "";
+			posted_data.notes = req.body.notes || "";
+			posted_data.is_primary = req.body.is_primary || "";
+ 			if (!posted_data.user_id || !posted_data.pincode || !posted_data.location || !posted_data.addressType) {
 				res.json({
-					error: false,
-					message: 'Address saved success',
-					userInfo: dbres,
-					responseCode: 1
+					success: false,
+					message: "Required parameter is missing",
+					data : null
 				});
 				res.end();
 				return;
 			}
-		})
-	}catch(err){
-		response.success=false,
-		response.message="Internal Server Error",
-		response.data =null,
-		res.send(500).json(response)
-	}
+			var Address = helper.getModel("address"); 
+			var newAddress = new Address(posted_data);
+			newAddress.save(function(errors, dbres) {
+				//console.log("errors", errors)
+				if(errors){
+					res.json({
+						success: false,
+						message: "Something went wrong, please try again",
+						data : errors
+					});
+					res.end();
+					return;
+				} else {
+					// return the information including token as JSON
+					res.json({
+						success: true,
+						message: 'Address added successfully!',
+						data: dbres,
+					});
+					res.end();
+					return;
+				}
+			})
+		}catch(err){
+			res.status(500);
+			res.json({
+				success: false,
+				message: 'Internal Server Error',
+				data: err,
+			});
+			res.end();
+			return;
+		}
     },
+
+	updateAddress: function(req, res, next){ 
+		try{
+			var addressId = mongoose.Types.ObjectId(req.params.id);
+			if (!addressId) {
+				res.json({
+					success: false,
+					message: 'addressId parameter is missing in URL',
+					data: null
+				});
+				res.end();
+			}
+
+			//console.log("REQUEST~~~", req.body);
+			if (!req.body) {
+				res.json({
+					success: false,
+					message: 'Form data is missing',
+					data : null
+				});
+				res.end();
+			}
+			
+			req.body.updated_at = new Date();
+			var Address = helper.getModel("address"); 
+			Address.findOneAndUpdate({_id: addressId}, {"$set": req.body}, {new: false}, async function(errors, dbres){
+				//console.log("errors", errors)
+				if(errors){
+					res.json({
+						success: false,
+						message: "Something went wrong, please try again",
+						data : errors
+					});
+					res.end();
+					return;
+				} else {
+					// return the information including token as JSON
+					res.json({
+						success: true,
+						message: (dbres ? 'Address updated successfully!' : "Nothing to update!"),
+						data: await Address.findById({ _id: addressId }),
+					});
+					res.end();
+					return;
+				}
+			})
+		}catch(err){
+			res.status(500);
+			res.json({
+				success: false,
+				message: 'Internal Server Error',
+				data: err,
+			});
+			res.end();
+			return;
+		}
+    },
+
+	removeAddress: function(req, res, next){ 
+		try{
+			var addressId = mongoose.Types.ObjectId(req.params.id);
+			if (!addressId) {
+				res.json({
+					success: false,
+					message: 'addressId parameter is missing in URL',
+					data: null
+				});
+				res.end();
+			}
+  
+			var Address = helper.getModel("address"); 
+			Address.findOneAndUpdate({_id: addressId}, {"$set": {is_deleted: true, updated_at: new Date()}}, {new: false}, async function(errors, dbres){
+				//console.log("errors", errors)
+				if(errors){
+					res.json({
+						success: false,
+						message: "Something went wrong, please try again",
+						data : errors
+					});
+					res.end();
+					return;
+				} else {
+					// return the information including token as JSON
+					res.json({
+						success: true,
+						message: "Address deleted successfully!",
+						data: null,
+					});
+					res.end();
+					return;
+				}
+			})
+		}catch(err){
+			res.status(500);
+			res.json({
+				success: false,
+				message: 'Internal Server Error',
+				data: err,
+			});
+			res.end();
+			return;
+		}
+    },
+
 /**
  * @api {get} http://http://18.191.254.193/user_personaldetails/user_id user_personaldetails
  * @apiVersion 1.0.0
@@ -4079,7 +4188,6 @@ module.exports.addCartServices = async (req, res) => {
 								sub_service_main = sub_service;
 							}
 						})
-						item.cost = (sub_service_main.cost) ? sub_service_main.cost :  servicesData.cost;
 						item.title = servicesData.title;
 						
 						items.push(item);
