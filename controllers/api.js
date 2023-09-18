@@ -1352,7 +1352,6 @@ try{
 			posted_data.phone = req.body.phone || "";
 			posted_data.addressType = req.body.addressType || ""; 
 			posted_data.pincode = req.body.pincode || "";
-			posted_data.location = req.body.location || "";
 			posted_data.block_number = req.body.block_number || "";
 			posted_data.street_number = req.body.street_number || "";
 			posted_data.building_name = req.body.building_name || "";
@@ -1362,7 +1361,7 @@ try{
 			posted_data.lng = req.body.lng || "";
 			posted_data.notes = req.body.notes || "";
 			posted_data.is_primary = req.body.is_primary || "";
- 			if (!posted_data.user_id || !posted_data.pincode || !posted_data.location || !posted_data.addressType) {
+ 			if (!posted_data.user_id || !posted_data.pincode || !posted_data.addressType) {
 				res.json({
 					success: false,
 					message: "Required parameter is missing",
