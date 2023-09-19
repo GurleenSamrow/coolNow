@@ -1,6 +1,7 @@
 var mongoose = require('../node_modules/mongoose');
 const userServices = require("../models/userServicesModel.js");
 const servicesModel = require("../models/serviceModel.js");
+const districtModel = require('../models/dashboardModel/districtModel');
 var Config = require('../config/config');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
@@ -1333,7 +1334,7 @@ try{
  * @apiError {json} AuthenticationTokenNotFound { message: 'Authentication token not provided!' , success: false}
  * @apiError {json} AuthTokenExpiredError { message: 'Session expired. You need to login again.' , success: false, sessionExpired: true}
  */
-	userSaveAddress: function(req, res, next){ //console.log('userSaveAddress'); 
+	userSaveAddress: async function(req, res, next){ //console.log('userSaveAddress'); 
 		try{
 			//console.log("REQUEST~~~", req.body);
 			if (!req.body) {
@@ -1370,6 +1371,22 @@ try{
 				res.end();
 				return;
 			}
+
+			//check if postal zone is available or not..
+			var postal_sector = await districtModel.findOne({
+				postal_sectors: posted_data.pincode.slice(0, 2)
+			});
+ 
+			if(!postal_sector){
+				res.json({
+					success: false,
+					message: "Invalid postal code, No postal sector found!",
+					data : null
+				});
+				res.end();
+				return;
+			}
+			
 			var Address = helper.getModel("address"); 
 			var newAddress = new Address(posted_data);
 			newAddress.save(function(errors, dbres) {
@@ -1405,7 +1422,7 @@ try{
 		}
     },
 
-	updateAddress: function(req, res, next){ 
+	updateAddress: async function(req, res, next){ 
 		try{
 			var addressId = mongoose.Types.ObjectId(req.params.id);
 			if (!addressId) {
@@ -1425,6 +1442,23 @@ try{
 					data : null
 				});
 				res.end();
+			}
+
+			//check if postal zone is available or not..
+			if(req.body.pincode){
+				var postal_sector = await districtModel.findOne({
+					postal_sectors: req.body.pincode.slice(0, 2)
+				});
+	 
+				if(!postal_sector){
+					res.json({
+						success: false,
+						message: "Invalid postal code, No postal sector found!",
+						data : null
+					});
+					res.end();
+					return;
+				}
 			}
 			
 			req.body.updated_at = new Date();

@@ -112,7 +112,10 @@ module.exports = function (app) {
     app.get('/districts/locations', dashboardController.getAllDistrictsLocations);
 
     // Appointments...
-    app.post('/appointments', dashboardController.userAppointments);
+    app.post('/appointments/slots', dashboardController.appointmentsSlots);
+    app.post('/appointments/draft', dashboardController.userAppointments);
+    app.get('/appointments/:_id/summary', dashboardController.userAppointments);
+    app.post('/appointments/:_id/finalize', dashboardController.userAppointments);
     app.post('/appointments/:_id/reschedule', dashboardController.userAppointmentsReschedule);
     app.post('/updateBookingStatus/:_id',dashboardController.updatedBookingStatus);
     app.get('/bookingDetails/:_id', dashboardController.bookingDetails);

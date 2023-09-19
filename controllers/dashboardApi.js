@@ -12,6 +12,7 @@ const stockModel = require('../models/dashboardModel/stock');
 const stockOutModel = require('../models/stockOut');
 const vehicleModel = require('../models/dashboardModel/vehicleModel');
 const priorityModel = require('../models/dashboardModel/priorityModel');
+const cartModel = require('../models/cartModel')
 const zoneModel = require('../models/dashboardModel/zoneModel');
 const districtModel = require('../models/dashboardModel/districtModel');
 const appointmentModel = require('../models/appointment');
@@ -23,11 +24,11 @@ const uploadImage = require('../services/s3Services')
 
 const getAvailableTeam =  async (location, startTime, endTime, bookingId  = null) => {
    
-    if(location.district){
+    if(location.pincode){
 
         //Find district id..
         var districts = await districtModel.findOne({
-            locations: location.district
+            postal_sectors: location.pincode.slice(0, 2)
         });
 
         if(districts._id){
@@ -109,9 +110,44 @@ const getAvailableTeam =  async (location, startTime, endTime, bookingId  = null
 
     return {
         success: false,
-        message: "Please select location district"
+        message: "Address postal code is invalid!"
     }
         
+}
+
+const getUserCart = async (userId) => {
+    return await cartModel.aggregate([
+        {
+          $lookup: {
+        	from: "services",
+        	localField: "servicesId",
+        	foreignField: "_id",
+        	as: "services"
+          }
+        },
+        {
+            $match: {
+              "userId": mongoose.Types.ObjectId(userId)
+            }
+        }
+    ]);
+}
+
+const getTimeStops = async (start, end, interval) => {
+    var startTime = moment(start, 'HH:mm');
+    var endTime = moment(end, 'HH:mm');
+    
+    if( endTime.isBefore(startTime) ){
+        endTime.add(1, 'day');
+    }
+
+    var timeStops = [];
+
+    while(startTime < endTime){
+        timeStops.push([new moment(startTime).format('HH:mm'), new moment(startTime.add(interval, 'minutes')).format('HH:mm')]);
+    }
+
+    return timeStops;
 }
 
 //Add manualUser
@@ -1648,7 +1684,141 @@ module.exports.addDistricts = async (req, res) => {
     }
 }
 
-//Appointments...............................................
+//Appointment Slots...............................................
+module.exports.appointmentsSlots = async (req, res) => {
+    try {
+        const { body } = req;
+        
+        if (!req.body) {
+            res.json({
+                success: false,
+                message: 'Form data is missing',
+                data : null
+            });
+            res.end();
+        }
+
+        if (!body.user_id || !body.address_id || !body.date) {
+            res.json({
+                success: false,
+                message: "All parameters are required (user_id|address_id|date)",
+                data : null
+            });
+            res.end();
+            return;
+        }
+
+        //find user cart..
+        var carts = await getUserCart(body.user_id);
+        if(carts.length == 0){
+            res.json({
+                success: false,
+                message: "User cart is empty!",
+                data : null
+            });
+            res.end();
+            return;
+        }
+
+        //find address..
+        var addressModel = helper.getModel("address");  
+        var address = await addressModel.findOne({_id: body.address_id});
+       
+        if(address._id && address.user_id == body.user_id){
+            
+            //Get total schedule time..
+            var totalTime = 20;
+            carts.map(function(item, index){
+                if(item.services.length > 0){
+                    item.services.map(function(service, index2){
+                        if(service.sub_service.length > 0){
+                            service.sub_service.map(function(sub_service, index3){
+                                 if(item.subServicesId.toString() == sub_service._id.toString()){
+                                    //check the unit and unit2 duration..
+                                    var duration = sub_service.duration;
+                                    if(sub_service.duration_2 > 0){
+                                        var diff = sub_service.duration_2 - sub_service.duration;
+                                        totalTime += (parseInt(sub_service.duration) + parseInt(diff*(item.numberOfunits-1)));
+                                    }else{
+                                        totalTime += parseInt(duration*item.numberOfunits);
+                                    }
+                                }
+                            })
+                        }
+                    })
+                }
+            });
+            
+            var reminder = totalTime%30;
+            if(reminder != 0){
+                totalTime = totalTime+reminder;
+            }
+            
+            //Make slots..
+            var availableSlots = [];
+            var slots = await getTimeStops("09:00", "17:00", totalTime);
+            await Promise.all(slots.map(async function(slot, index){
+
+                //Make time slots..
+                var currentTime = moment().format('YYYY-MM-DDT09:mm:ss.SSS[Z]');
+                var startTimeString = `${body.date} ${slot[0]}:00`;
+                var startTimeFormat = moment(startTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+                var endTimeString = `${body.date} ${slot[1]}:00`;
+                var endTimeFormat = moment(endTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+
+                //Get available team..
+                if(startTimeFormat >= currentTime){
+                    var teamId = await getAvailableTeam(address, startTimeFormat, endTimeFormat);
+                    if(teamId.success && teamId.team_id){
+                        availableSlots.push({team_id: teamId.team_id, slot: slot, slot_formated : moment(slot[0], 'HH:mm').format('hh:mm A') + " - "+ moment(slot[1], 'HH:mm').format('hh:mm A')})
+                    }
+                } 
+            }));
+  
+            if(availableSlots.length > 0){
+                res.json({
+                    success: true,
+                    message: 'List of available slots!',
+                    data: availableSlots.sort(function (a, b) {
+                        return a.slot[0].localeCompare(b.slot[0]);
+                    }),
+                });
+                res.end();
+                return;
+            }else{
+                res.json({
+                    success: false,
+                    message: "No slots available!",
+                    data : null
+                });
+                res.end();
+                return;
+            }
+           
+        }else{
+            res.json({
+                success: false,
+                message: "User address is invalid!",
+                data : null
+            });
+            res.end();
+            return;
+        }
+       
+
+    } catch (err) {
+        res.status(500);
+        res.json({
+            success: false,
+            message: 'Internal Server Error',
+            data: err,
+        });
+        res.end();
+        return;
+    }
+}
+ 
+//Appointment Booking...............................................
 module.exports.userAppointments = async (req, res) => {
     try {
         const { body } = req;
