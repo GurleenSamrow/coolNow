@@ -113,9 +113,9 @@ module.exports = function (app) {
 
     // Appointments...
     app.post('/appointments/slots', dashboardController.appointmentsSlots);
-    app.post('/appointments/draft', dashboardController.userAppointments);
-    app.get('/appointments/:_id/summary', dashboardController.userAppointments);
-    app.post('/appointments/:_id/finalize', dashboardController.userAppointments);
+    app.post('/appointments/draft', dashboardController.draftAppointments);
+    app.get('/appointments/:_id/summary', dashboardController.bookingDetails);
+    app.post('/appointments/:_id/update/:action', dashboardController.updateAppointments);
     app.post('/appointments/:_id/reschedule', dashboardController.userAppointmentsReschedule);
     app.post('/updateBookingStatus/:_id',dashboardController.updatedBookingStatus);
     app.get('/bookingDetails/:_id', dashboardController.bookingDetails);

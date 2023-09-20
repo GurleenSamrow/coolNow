@@ -20,7 +20,7 @@ const package = require('../models/package');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
 const uploadImage = require('../services/s3Services')
-
+const taxRate = 8;
 
 const getAvailableTeam =  async (location, startTime, endTime, bookingId  = null) => {
    
@@ -133,18 +133,72 @@ const getUserCart = async (userId) => {
     ]);
 }
 
+const calculateRateAndTime = async (carts) => {
+    //Get total schedule time..
+    var totalTime = 0;
+    var totalPrice =  0;
+    var items = [];
+    if(carts.length > 0){
+        carts.map(function(item, index){
+            if(item.services.length > 0){
+                item.services.map(function(service, index2){
+                    if(service.sub_service.length > 0){
+                        service.sub_service.map(function(sub_service, index3){
+                            if(item.subServicesId.toString() == sub_service._id.toString()){
+                                //check the unit and unit2 duration..
+                                var duration = (sub_service.duration ? sub_service.duration : (service.duration ? service.duration : 0));
+                                if(sub_service.duration_2 > 0){
+                                    var diff = sub_service.duration_2 - duration;
+                                    duration  = (parseInt(duration) + parseInt(diff*(item.numberOfunits-1)));
+                                }else{
+                                    duration  = parseInt(duration*item.numberOfunits);
+                                }
+                                totalTime += duration;
+
+                                //check rate..
+                                var price = (sub_service.price ? sub_service.price : (service.price ? service.price : 0));
+                                if(sub_service.price_2 > 0){
+                                    price  =  parseInt((sub_service.price_2/2));
+                                } 
+                                totalPrice += parseInt(price*item.numberOfunits);
+
+                                const { services, ...rest } = item;
+                                rest.price = price;
+                                rest.duration = duration;
+                                items.push(rest);
+                            }
+                        })
+                    }
+                })
+            }
+        });
+
+        if(totalTime > 0){
+            totalTime = totalTime+20;
+            var reminder = totalTime%30;
+            if(reminder != 0){
+                totalTime = totalTime+(30-reminder);
+            }
+        }
+    }
+      
+    return { duration: totalTime, price: totalPrice, items: items}
+}
+
 const getTimeStops = async (start, end, interval) => {
     var startTime = moment(start, 'HH:mm');
     var endTime = moment(end, 'HH:mm');
-    
+    var startTimeAlt = moment(start, 'HH:mm').add(interval, 'minutes');
+
     if( endTime.isBefore(startTime) ){
         endTime.add(1, 'day');
     }
 
     var timeStops = [];
 
-    while(startTime < endTime){
+    while(startTime < endTime && startTimeAlt <= endTime){
         timeStops.push([new moment(startTime).format('HH:mm'), new moment(startTime.add(interval, 'minutes')).format('HH:mm')]);
+        startTimeAlt.add(interval, 'minutes');
     }
 
     return timeStops;
@@ -1727,53 +1781,31 @@ module.exports.appointmentsSlots = async (req, res) => {
         if(address._id && address.user_id == body.user_id){
             
             //Get total schedule time..
-            var totalTime = 20;
-            carts.map(function(item, index){
-                if(item.services.length > 0){
-                    item.services.map(function(service, index2){
-                        if(service.sub_service.length > 0){
-                            service.sub_service.map(function(sub_service, index3){
-                                 if(item.subServicesId.toString() == sub_service._id.toString()){
-                                    //check the unit and unit2 duration..
-                                    var duration = sub_service.duration;
-                                    if(sub_service.duration_2 > 0){
-                                        var diff = sub_service.duration_2 - sub_service.duration;
-                                        totalTime += (parseInt(sub_service.duration) + parseInt(diff*(item.numberOfunits-1)));
-                                    }else{
-                                        totalTime += parseInt(duration*item.numberOfunits);
-                                    }
-                                }
-                            })
-                        }
-                    })
-                }
-            });
-            
-            var reminder = totalTime%30;
-            if(reminder != 0){
-                totalTime = totalTime+reminder;
-            }
-            
-            //Make slots..
             var availableSlots = [];
-            var slots = await getTimeStops("09:00", "17:00", totalTime);
-            await Promise.all(slots.map(async function(slot, index){
+            var data = await calculateRateAndTime(carts);
+            var totalTime = (data.duration ? data.duration : 0);
 
-                //Make time slots..
-                var currentTime = moment().format('YYYY-MM-DDT09:mm:ss.SSS[Z]');
-                var startTimeString = `${body.date} ${slot[0]}:00`;
-                var startTimeFormat = moment(startTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
-                var endTimeString = `${body.date} ${slot[1]}:00`;
-                var endTimeFormat = moment(endTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
-
-                //Get available team..
-                if(startTimeFormat >= currentTime){
-                    var teamId = await getAvailableTeam(address, startTimeFormat, endTimeFormat);
-                    if(teamId.success && teamId.team_id){
-                        availableSlots.push({team_id: teamId.team_id, slot: slot, slot_formated : moment(slot[0], 'HH:mm').format('hh:mm A') + " - "+ moment(slot[1], 'HH:mm').format('hh:mm A')})
-                    }
-                } 
-            }));
+            //Make slots..
+            if(totalTime > 0){
+                var slots = await getTimeStops("09:00", "17:00", totalTime);
+                await Promise.all(slots.map(async function(slot, index){
+    
+                    //Make time slots..
+                    var currentTime = moment().format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+                    var startTimeString = `${body.date} ${slot[0]}:00`;
+                    var startTimeFormat = moment(startTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+                    var endTimeString = `${body.date} ${slot[1]}:00`;
+                    var endTimeFormat = moment(endTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+    
+                    //Get available team..
+                    if(startTimeFormat >= currentTime){
+                        var teamId = await getAvailableTeam(address, startTimeFormat, endTimeFormat);
+                        if(teamId.success && teamId.team_id){
+                            availableSlots.push({team_id: teamId.team_id, slot: slot, slot_formated : moment(slot[0], 'HH:mm').format('hh:mm A') + " - "+ moment(slot[1], 'HH:mm').format('hh:mm A')})
+                        }
+                    } 
+                }));
+            }
   
             if(availableSlots.length > 0){
                 res.json({
@@ -1817,182 +1849,383 @@ module.exports.appointmentsSlots = async (req, res) => {
         return;
     }
 }
- 
-//Appointment Booking...............................................
-module.exports.userAppointments = async (req, res) => {
+
+//Appointment Draft...............................................
+module.exports.draftAppointments = async (req, res) => {
     try {
         const { body } = req;
-       
-        var userId = mongoose.Types.ObjectId(body.user_id) || "";
-		var userName = (body.user_name) ? body.user_name : "";
-  		var selectedService = ((body.selected_service).length > 0) ? body.selected_service : [];
-		var date = (body.date) ? body.date : "";
-		var timeSlots = (body.time_slot) ? body.time_slot : "";
-		var location =  (body.location) ? body.location : ""; 
-		var latitude = (body.latitude) ? body.latitude : "";
-		var longitude = (body.longitude) ? body.longitude : "";
-		var promoCode = (body.promo_code) ? body.promo_code : "";
-		var discountType = (body.discount_type) ? parseInt(body.discount_type) : "";
-		var promoDiscount = (body.promo_discount) ? parseInt(body.promo_discount) : 0;
-		var tip = (body.tip) ? parseInt(body.tip) : 0;
- 		var serviceCharge = (body.service_charge) ? parseInt(body.service_charge) : 0;
-		var tax = (body.tax) ? parseInt(body.tax) : 0;
-       
-        if(!userId || !userName || (selectedService.length == 0) || !date || !timeSlots  || !location || !latitude || !longitude){
+        
+        if (!req.body) {
             res.json({
-                error: true,
-                message: "Required parameters missing!"
+                success: false,
+                message: 'Form data is missing',
+                data : null
+            });
+            res.end();
+        }
+
+        if (!body.user_id || !body.address_id || !body.date || !body.slot) {
+            res.json({
+                success: false,
+                message: "All parameters are required (user_id|address_id|date|slot)",
+                data : null
             });
             res.end();
             return;
         }
 
-        var pItems = [];
-		var bookingTotal = 0; 
-		var bTAfterDiscount = 0;
-		var totalDiscount = 0;
-		var tPAmount = 0;
-		var timeTotal = 0; 
+        //find user cart..
+        var carts = await getUserCart(body.user_id);
+        if(carts.length == 0){
+            res.json({
+                success: false,
+                message: "User cart is empty!",
+                data : null
+            });
+            res.end();
+            return;
+        }
+        
+        //find address..
+        var addressModel = helper.getModel("address");  
+        var address = await addressModel.findOne({_id: body.address_id});
+       
+        if(address._id && address.user_id == body.user_id){
+           
+            //Delete old drafts..
+            await appointmentModel.deleteMany({user_id : body.user_id, 'status' : 'draft'});
  
-        var startTimeString = date+" "+timeSlots.start_time_slot+":00";
-        var startTimeFormat = moment(startTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
-        var endTimeString = date+" "+timeSlots.end_time_slot+":00";
-        var endTimeFormat = moment(endTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]')
+            //Make time slots..
+            var startTimeString = `${body.date} ${body.slot[0]}:00`;
+            var startTimeFormat = moment(startTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+            var endTimeString = `${body.date} ${body.slot[1]}:00`;
+            var endTimeFormat = moment(endTimeString).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
 
-        //Get available team..
-        var teamId = await getAvailableTeam(location, startTimeFormat, endTimeFormat);
-        if(teamId.success && teamId.team_id){
-            teamId = teamId.team_id;
-        }else{
-            res.json({
-                error: true,
-                message: teamId.message
-            });
-            res.end();
-            return;
-        }
+            //Get available team..
+            var teamId = await getAvailableTeam(address, startTimeFormat, endTimeFormat);
+            if(teamId.success && teamId.team_id){
+                
+                var data = await calculateRateAndTime(carts);
+  
+                if(data.items.length > 0){
 
-        selectedService.forEach(function (service, index) {
-            
-			var pData = {};
-			pData.item_uniq_id = helper.getUniqueItemId();
-			pData.service_id = mongoose.Types.ObjectId(service.id);
-			pData.service_name = service.name;
-			pData.service_duration = service.duration;
-			pData.service_amount = service.amount;
-			pData.booking_units = service.units;
-			pData.total_booking_amount = (service.amount*service.units);
-			pData.image = (service.image) ? service.image : "";
-			pData.video = (service.video) ? service.video : "";
-			pData.comment = (service.comment) ? service.comment : "";
-			pData.service_confirmation = true;
-			
-			bookingTotal += (pData.service_amount*pData.booking_units);
-			timeTotal += parseInt(service.duration);
-			pItems.push(pData);
-		})
+                    var pItems = [];
+                    var bookingTotal = data.price; 
+                    var bTAfterDiscount = data.price;
+                    var taxAmount = ((data.price * taxRate)/100).toFixed(20);
+                    var tPAmount = parseFloat(data.price) + parseFloat(taxAmount);
+                    var timeTotal = data.duration; 
 
-        if(pItems.length > 0){
-
-            if(discountType == 'percentage'){
-                totalDiscount = (bookingTotal*promoDiscount/100);
-            } else {
-                totalDiscount = promoDiscount;
-            }
-            
-            bTAfterDiscount = (bookingTotal-totalDiscount);
-            tPAmount = (bTAfterDiscount+tip+tax+serviceCharge)
-             
-            var posted_booking = {
-                "user_id": userId,
-                "user_name": userName,
-                "team_id": teamId,
-                "user_latitude": latitude,
-                "user_longitude": longitude,
-                "total": bookingTotal,
-                "promo_code": promoCode,
-                "discount": promoDiscount,
-                "discount_type":discountType,
-                "discount_amount":totalDiscount,
-                "total_after_discount": bTAfterDiscount,
-                "delivery_location": location,
-                "tip_amount": tip,
-                "tax": tax,
-                "start_time" : new Date(startTimeFormat),
-                "end_time" : new Date(endTimeFormat),
-                "service_charge": serviceCharge,
-                "total_payable_amount": tPAmount,
-                "total_time_duration": timeTotal,
-                "amount_paid": {
-                    "total_paid" : 0,
-                    "cash"   : 0,
-                    "online" : 0
-                },
-                "payment_status" : "pending",
-                "payment_mode" : "cash",
-                "status" : "pending",
-                "items": pItems
-            };
-
-            //add new Booking
-            var Booking = helper.getModel("appointment");
-            var newBooking = new Booking(posted_booking);
-            newBooking.save(function (err, dbres) {
-                if (err) {
+                    var posted_booking = {
+                        "user_id": body.user_id,
+                        "team_id": teamId.team_id,
+                        "address_id": address._id,
+                        "items_total": bookingTotal,
+                        "discount_amount": 0,
+                        "total_after_discount": bTAfterDiscount,
+                        "tip_amount": 0,
+                        "tax": taxAmount,
+                        "service_charge": 0,
+                        "total_payable_amount": tPAmount,
+                        "start_time" : new Date(startTimeFormat),
+                        "end_time" : new Date(endTimeFormat),
+                        "total_time_duration": timeTotal,
+                        "payment_status" : "pending",
+                        "items": data.items
+                    };
+        
+                    //add new Booking
+                    var Booking = helper.getModel("appointment");
+                    var newBooking = new Booking(posted_booking);
+                    newBooking.save(function (err, dbres) {
+                        if (err) {
+                            res.json({
+                                success: false,
+                                message: "Something went wrong to save data in booking.",
+                                mongoose_error: JSON.stringify(err),
+                                data : null
+                            });
+                            res.end();
+                            return;
+                        } else {
+                            if (dbres && dbres._id) {
+                                res.json({
+                                    success: true,
+                                    message: 'Booking Success!',
+                                    data: dbres,
+                                });
+                                res.end();
+                                return;
+                            } else {
+                                res.json({
+                                    success: false,
+                                    message: "Something went wrong to save data in booking.",
+                                    mongoose_error: JSON.stringify(err),
+                                    data : null
+                                });
+                                res.end();
+                                return;
+                            }
+                        }
+                    })
+                     
+                }else{
                     res.json({
-                        error: true,
+                        success: false,
                         message: "Something went wrong to save data in booking.",
-                        mongoose_error: JSON.stringify(err),
-                        responseCode: 0
+                        data : null
                     });
                     res.end();
                     return;
-                } else {
-                    //console.log("dbres._id-", dbres._id);
-                    if (dbres && dbres._id) {
-                        
-                        res.json({
-                            error: false,
-                            message: 'Booking Success!',
-                            results: dbres,
-                            responseCode: 1
-                        });
-                        res.end();
-                        return;
-                    } else {
-                        res.json({
-                            error: true,
-                            message: "Something went wrong to save data in booking.",
-                            mongoose_error: JSON.stringify(err),
-                            responseCode: 0
-                        });
-                        res.end();
-                        return;
-                    }
                 }
-            })
-			 
+                
+            }else{
+                res.json({
+                    success: false,
+                    message: "Selected slot is already booked!",
+                    data : null
+                });
+                res.end();
+                return;
+            }
+
         }else{
             res.json({
-                error: true,
-                message: "Something went wrong to save data in booking.",
-                responseCode: 0
+                success: false,
+                message: "User address is invalid!",
+                data : null
             });
             res.end();
             return;
         }
+       
 
     } catch (err) {
+        res.status(500);
         res.json({
-            error: true,
-            message: "Internal Server Error!",
-            mongoose_error: JSON.stringify(err)
+            success: false,
+            message: 'Internal Server Error',
+            data: err,
         });
         res.end();
         return;
     }
 }
+ 
+//Appointment Summary/Details...............................................
+module.exports.bookingDetails = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const data = await appointmentModel.findById(_id)
+        if (data) {
+            res.send({ success: true, message: "Booking Details!", data: data })
+        } else {
+            res.send({ success: true, message: "Booking details not found", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: err })
+    }
+}
 
+//Appointment Add/Remove Coupoun and tip...............................................
+module.exports.updateAppointments = async (req, res) => {
+    try {
+        const { _id, action } = req.params;
+
+        const data = await appointmentModel.findById(_id)
+        if (data) {
+
+            var updated = false;
+            if(action == 'coupon'){
+
+                if (!req.body.promocode) {
+                    res.json({
+                        success: false,
+                        message: "Required parameters is missing (promocode)",
+                        data : null
+                    });
+                    res.end();
+                    return;
+                }
+
+                //Find promocode if available..
+                var currentTime = moment().format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+                const promo_code = await PromoCode.findOne({
+                    code: req.body.promocode.toUpperCase(),
+                    status: true,
+                    $and : [ 
+                        {
+                            "startDate": {
+                                $lte: new Date(currentTime)
+                            }
+                        }, {
+                            "endDate": {
+                                $gte: new Date(currentTime)
+                            }
+                        }
+                    ]
+                });
+
+                if(!promo_code){
+                    return res.send({ success: false, message: "Invalid Promocode!", data: null })
+                }
+ 
+                var bookingTotal = data.items_total; 
+                //calculate discount...
+                var discount = (promo_code.discount ? promo_code.discount : 0);
+                var discountType = (promo_code.couponType == 'Percentage' ? "percent" : "fixed");;
+                if(discountType == 'percent'){
+                    discount = ((bookingTotal*discount)/100).toFixed(2);
+                }
+                var bTAfterDiscount = bookingTotal - discount;
+                var taxAmount = ((bTAfterDiscount * taxRate)/100).toFixed(20);
+                var tPAmount = parseFloat(bTAfterDiscount) + parseFloat(taxAmount) + parseFloat(data.tip_amount);
+
+                //update promocode..
+                updated = await appointmentModel.updateOne(
+                    { _id: mongoose.Types.ObjectId(_id) },
+                    {
+                        $set: {
+                            "promo_code" : promo_code.code,
+                            "discount_amount": discount,
+                            "discount_type": discountType,
+                            "total_after_discount": bTAfterDiscount,
+                            "tax": taxAmount,
+                            "total_payable_amount": tPAmount,
+                            "updated_at": new Date(),
+                        }
+                    }
+                )
+ 
+            }else if(action == 'remove_coupon'){
+                var bookingTotal = data.items_total; 
+                var bTAfterDiscount = bookingTotal;
+                var taxAmount = ((bookingTotal * taxRate)/100).toFixed(20);
+                var tPAmount = parseFloat(bTAfterDiscount) + parseFloat(taxAmount)  + parseFloat(data.tip_amount);
+                //update promocode..
+                updated = await appointmentModel.updateOne(
+                    { _id: mongoose.Types.ObjectId(_id) },
+                    {
+                        $set: {
+                            "promo_code" : "",
+                            "discount_amount": 0,
+                            "discount_type": 'fixed',
+                            "total_after_discount": bTAfterDiscount,
+                            "tax": taxAmount,
+                            "total_payable_amount": tPAmount,
+                            "updated_at": new Date(),
+                        }
+                    }
+                )
+
+            }else if(action == 'tip'){
+
+                if (!req.body.tip_amount) {
+                    if(req.body.tip_amount >= 0){
+                        if(req.body.tip_amount == ""){
+                            req.body.tip_amount = 0;
+                        }
+                    }else{
+                        res.json({
+                            success: false,
+                            message: "Required parameters is missing (tip_amount)",
+                            data : null
+                        });
+                        res.end();
+                        return;
+                    }
+                }
+ 
+                var bTAfterDiscount = data.total_after_discount;
+                var taxAmount = data.tax;
+                var tip_amount = req.body.tip_amount
+                var tPAmount = parseFloat(bTAfterDiscount) + parseFloat(taxAmount)  + parseFloat(tip_amount);
+                //update promocode..
+                updated = await appointmentModel.updateOne(
+                    { _id: mongoose.Types.ObjectId(_id) },
+                    {
+                        $set: {
+                            "tip_amount": tip_amount,
+                            "total_payable_amount": tPAmount,
+                            "updated_at": new Date(),
+                        }
+                    }
+                )
+            }else if(action == 'payment'){
+
+                if (!req.body.payment_details || !req.body.payment_details.payment_mode) {
+                    res.json({
+                        success: false,
+                        message: "Required parameters is missing (payment_details.payment_mode)",
+                        data : null
+                    });
+                    res.end();
+                    return;
+                }
+
+                if(req.body.payment_details.payment_mode != 'cash'){
+                    res.json({
+                        success: false,
+                        message: "Invalid payment mode, Only `cash` is applicable!",
+                        data : null
+                    });
+                    res.end();
+                    return;
+                }
+
+                //update promocode..
+                updated = await appointmentModel.updateOne(
+                    { _id: mongoose.Types.ObjectId(_id) },
+                    {
+                        $set: {
+                            "payment_status": 'complete',
+                            "payment_mode": 'cash',
+                            "status": 'pending',
+                            "updated_at": new Date(),
+                        }
+                    }
+                )
+
+                //Remove user cart items..
+                await cartModel.deleteMany({user_id : data.user_id});
+
+            } 
+            
+            if(updated){
+
+                return res.send({ success: true, message: "Booking Updated!", data: await appointmentModel.findById(_id) })
+
+            }else{
+                res.json({
+                    success: false,
+                    message: "Invalid update action!",
+                    data : null
+                });
+                res.end();
+                return;
+            }
+ 
+        } else {
+            res.json({
+                success: false,
+                message: "Booking details not found!",
+                data : null
+            });
+            res.end();
+            return;
+        }
+    } catch (err) {
+        res.status(500);
+        res.json({
+            success: false,
+            message: 'Internal Server Error',
+            data: err,
+        });
+        res.end();
+        return;
+    }
+}
+ 
 //Appointments..Reschedule.............................................
 module.exports.userAppointmentsReschedule = async (req, res) => {
     try {
@@ -2198,20 +2431,6 @@ module.exports. updatedBookingStatus = async (req, res) => {
             }
         } else {
             res.send({ success: false, message: "Status is Required", data: null })
-        }
-    } catch (err) {
-        res.send({ success: false, message: "Internal Server Error", data: null })
-    }
-}
-//bookingetails..
-module.exports.bookingDetails = async (req, res) => {
-    try {
-        const { _id } = req.params;
-        const data = await appointmentModel.find({_id: _id})
-        if (data.length > 0) {
-            res.send({ success: true, message: "Get Booking Details Successfully", data: data })
-        } else {
-            res.send({ success: true, message: "Not Found Booking Details", data: null })
         }
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })

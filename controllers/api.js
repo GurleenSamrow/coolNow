@@ -1,6 +1,6 @@
 var mongoose = require('../node_modules/mongoose');
 const userServices = require("../models/userServicesModel.js");
-const servicesModel = require("../models/serviceModel.js");
+const services = require("../models/serviceModel.js");
 const districtModel = require('../models/dashboardModel/districtModel');
 var Config = require('../config/config');
 var helper = require('../helper.js');
@@ -12,7 +12,6 @@ var fs = require('fs');
 var path 	 = require('path');
 const async = require('async');
 const response = require('../services/response')
-const services = require('../models/dashboardModel/services');
 const ratting = require('../models/ratingModel');
 const appointmentModel = require('../models/appointment')
 const cartModel = require('../models/cartModel')
@@ -4213,7 +4212,7 @@ module.exports.addCartServices = async (req, res) => {
 			if(!response){
 				if (item.servicesId && item.subServicesId && item.userId && item.numberOfunits) {
 					//Find the sub service details..
-					var servicesData = await servicesModel.findOne({"sub_service._id" : mongoose.Types.ObjectId(item.subServicesId)});
+					var servicesData = await services.findOne({"sub_service._id" : mongoose.Types.ObjectId(item.subServicesId)});
 					if(servicesData && servicesData.id == item.servicesId){
 						var sub_service_main = {};
 						await  servicesData.sub_service.forEach(function (sub_service, index1) {
