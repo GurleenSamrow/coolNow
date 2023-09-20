@@ -7,28 +7,17 @@
 			ref: 'user',
 			required: true
 		},
-		user_name: {
-			type: String,
-			required: true
-		},
 		team_id: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: 'techTeam',
-			required: false
+			required: true
 		},
-		user_latitude: {
-			type: String,
-			trim: true,
-			required: false,
-			default: ""
+		address_id: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'address',
+			required: true
 		},
-		user_longitude: {
-			type: String,
-			trim: true,
-			required: false,
-			default: ""
-		},
-		total: {
+		items_total: {
 			type: Number,
 			required: true,
 			default: 0
@@ -36,11 +25,6 @@
 		promo_code: {
 			type: String,
 			required: false
-		},
-		discount: {
-			type: Number,
-			required: false,
-			default: 0
 		},
 		discount_type: {
 			type: String,
@@ -56,10 +40,6 @@
 			type: Number,
 			required: true,
 			default: 0
-		},
-		delivery_location: {
-			type: mongoose.Schema.Types.Mixed, 
-			required: true
 		},
 		tip_amount: {
 			type: Number,
@@ -86,10 +66,6 @@
 			type: mongoose.Schema.Types.Mixed, // "name":"package1", "amount": 400
 			required: false
 		},
-		amount_paid: {
-			type: mongoose.Schema.Types.Mixed, // "total_paid" : 65, "cash" : 50, "online" : 5,
-			required: false
-		},
 		payment_status: {
 			type: String,
 			required: true,
@@ -114,7 +90,7 @@
 		status: {
 			type: String,
 			required: true,
-			default: 'pending' //"pending", "leavingforjob", "jobstarted", "jobcompleted", "cancelled"
+			default: 'draft' //"draft", "pending", "leavingforjob", "jobstarted", "jobcompleted", "cancelled"
 		},
 		status_date: { type: Date, default: Date.now },
 		created_at: { type: Date, default: Date.now },
