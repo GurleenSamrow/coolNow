@@ -17,6 +17,10 @@
 			ref: 'address',
 			required: true
 		},
+		address_details:{
+			type: mongoose.Schema.Types.Mixed,
+			required: false
+		},
 		items_total: {
 			type: Number,
 			required: true,
