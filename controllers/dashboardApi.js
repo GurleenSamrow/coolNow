@@ -204,6 +204,16 @@ const getTimeStops = async (start, end, interval) => {
     return timeStops;
 }
 
+const getFormattedBooking = async (id) => {
+    var appointment = await appointmentModel.findById(id);
+    if(appointment && appointment.address_id){
+        //Find address and append..
+        var addressModel = helper.getModel("address");  
+        appointment.address_details = await addressModel.findOne({_id: appointment.address_id});
+    }
+    return appointment;
+}
+
 //Add manualUser
 module.exports.addManualUser = async (req, res) => {
     try {
@@ -1937,7 +1947,7 @@ module.exports.draftAppointments = async (req, res) => {
                     //add new Booking
                     var Booking = helper.getModel("appointment");
                     var newBooking = new Booking(posted_booking);
-                    newBooking.save(function (err, dbres) {
+                    newBooking.save(async function (err, dbres) {
                         if (err) {
                             res.json({
                                 success: false,
@@ -1952,7 +1962,7 @@ module.exports.draftAppointments = async (req, res) => {
                                 res.json({
                                     success: true,
                                     message: 'Booking Success!',
-                                    data: dbres,
+                                    data: await getFormattedBooking(dbres._id),
                                 });
                                 res.end();
                                 return;
@@ -2016,7 +2026,7 @@ module.exports.draftAppointments = async (req, res) => {
 module.exports.bookingDetails = async (req, res) => {
     try {
         const { _id } = req.params;
-        const data = await appointmentModel.findById(_id)
+        const data = await getFormattedBooking(_id)
         if (data) {
             res.send({ success: true, message: "Booking Details!", data: data })
         } else {
@@ -2193,7 +2203,7 @@ module.exports.updateAppointments = async (req, res) => {
             
             if(updated){
 
-                return res.send({ success: true, message: "Booking Updated!", data: await appointmentModel.findById(_id) })
+                return res.send({ success: true, message: "Booking Updated!", data: await getFormattedBooking(_id) })
 
             }else{
                 res.json({
