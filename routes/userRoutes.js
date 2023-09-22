@@ -28,8 +28,7 @@ module.exports = function(app) {
 	app.post('/user_trackbookingdetails',require('../controllers/api').userTrackBookingDetails);
 	app.post('/user_generalpurposebtucalculator', require('../controllers/api').userGeneralPurposeBTUCalculator);
 	app.post('/user_acbtucalculator', require('../controllers/api').userAcBTUCalculator);
-	app.post('/user_submitfeedback', require('../controllers/api').userSubmitFeedback);
-	app.get('/user_updatedbookingdetails/:id',require('../controllers/api').getBookingDetailsById);
+ 	app.get('/user_updatedbookingdetails/:id',require('../controllers/api').getBookingDetailsById);
 	app.post('/user_scheduleappointment',require('../controllers/api').userScheduleAppointment);
 	app.post('/user_datewiseavailableslots',require('../controllers/api').userDatewiseAvailableSlots);
 	app.post('/user_monthavailableslotsdays',require('../controllers/api').userMonthAvailableSlotsDays);

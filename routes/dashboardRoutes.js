@@ -114,13 +114,12 @@ module.exports = function (app) {
     // Appointments...
     app.post('/appointments/slots', dashboardController.appointmentsSlots);
     app.post('/appointments/draft', dashboardController.draftAppointments);
+    app.get('/appointments/:user_id', dashboardController.getAllbooking);
     app.get('/appointments/:_id/summary', dashboardController.bookingDetails);
     app.post('/appointments/:_id/update/:action', dashboardController.updateAppointments);
     app.post('/appointments/:_id/reschedule', dashboardController.userAppointmentsReschedule);
+    app.post('/appointments/:_id/feedback', require('../controllers/api').userSubmitFeedback);
     app.post('/updateBookingStatus/:_id',dashboardController.updatedBookingStatus);
-    app.get('/bookingDetails/:_id', dashboardController.bookingDetails);
-    app.get('/getAllbooking', dashboardController.getAllbooking);
-
 
     //pacakage
     app.post('/package', dashboardController.addPackage);
