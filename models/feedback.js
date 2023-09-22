@@ -6,31 +6,35 @@
 		  type: mongoose.Schema.Types.ObjectId,
 		  required: true
 		},
-		user_name: {
-			type: String,
-			trim: true,
-			required: [true, 'name is required'] 
-		},
-		technician_id: {
-		  type: mongoose.Schema.Types.ObjectId,
-		  required: true
-		},
-		technician_name: {
-			type: String,
-			trim: true,
-			required: [true, 'name is required'] 
-		},
-		service_id: {
+		team_id: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: 'service',
+			required: true
+		},
+ 		technician_ids: {
+			type: Array,
 			required: true
 		},
 		booking_id: {
 			type: mongoose.Schema.Types.ObjectId,
-			//ref: 'booking',
-			//required: true
+			required: true
 		},
-		rating: {
+		technician_attitude: {
+			type: Number,
+			required:true
+		},
+		overall_workmanship: {
+			type: Number,
+			required:true
+		},
+		job_cleaniness: {
+			type: Number,
+			required:true
+		},
+		avg_rating: {
+			type: Number,
+			required:true
+		},
+		kpi_factor: {
 			type: Number,
 			required:true
 		},

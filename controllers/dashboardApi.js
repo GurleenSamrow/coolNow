@@ -147,7 +147,7 @@ const calculateRateAndTime = async (carts) => {
                             if(item.subServicesId.toString() == sub_service._id.toString()){
                                 //check the unit and unit2 duration..
                                 var duration = (sub_service.duration ? sub_service.duration : (service.duration ? service.duration : 0));
-                                if(sub_service.duration_2 > 0){
+                                if(sub_service.duration_2 > 0 && item.numberOfunits > 1){
                                     var diff = sub_service.duration_2 - duration;
                                     duration  = (parseInt(duration) + parseInt(diff*(item.numberOfunits-1)));
                                 }else{
@@ -157,7 +157,7 @@ const calculateRateAndTime = async (carts) => {
 
                                 //check rate..
                                 var price = (sub_service.price ? sub_service.price : (service.price ? service.price : 0));
-                                if(sub_service.price_2 > 0){
+                                if(sub_service.price_2 > 0 && item.numberOfunits > 1){
                                     price  =  parseInt((sub_service.price_2/2));
                                 } 
                                 totalPrice += parseInt(price*item.numberOfunits);
@@ -2022,6 +2022,110 @@ module.exports.draftAppointments = async (req, res) => {
     }
 }
  
+
+//Appointment list... 
+module.exports.getAllbooking = async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        const { period } = req.query;
+        
+        var match1 = {$match: {
+			user_id: mongoose.Types.ObjectId(user_id),
+		}};
+
+		if(period == 'all'){
+			var match2 = {$match: {}};
+		} else {
+            if(period == 'weekly'){
+				var start_date = moment().add(-7, 'days').format('YYYY-MM-DD');
+				var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');			
+			} else if(period == 'yearly'){
+				var start_date = moment().add(-1, 'year').format('YYYY-MM-DD');
+				var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+			} else{
+                var start_date = moment().add(-1, 'month').format('YYYY-MM-DD');
+				var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+            }
+			
+			var match2 = {$match: {
+				"created_at": {
+					'$gte': new Date(start_date),
+					'$lt': new Date(end_date)
+				}
+			}};
+		}
+
+        appointmentModel.aggregate([
+			match1,
+			{
+				$lookup:
+				{
+					from: "users",
+					localField: "user_id",
+					foreignField: "_id",
+					as: "user_info"
+				}
+			},
+			{$unwind: {
+				"path": "$user_info",
+				"preserveNullAndEmptyArrays": true
+			}},
+			{
+				$lookup:
+				{
+					from: "techteams",
+					localField: "team_id",
+					foreignField: "_id",
+					as: "team_info"
+				}
+			},
+			{$unwind: {
+				"path": "$team_info",
+				"preserveNullAndEmptyArrays": true
+			}},
+            {
+				$lookup:
+				{
+					from: "feedbacks",
+					localField: "_id",
+					foreignField: "booking_id",
+					as: "feedback_info"
+				} 
+			},
+			{$unwind: {
+				"path": "$feedback_info",
+				"preserveNullAndEmptyArrays": true
+			}},
+			match2,
+			{$sort: {
+				_id: -1
+			}},
+		]).exec(function (err, results) {
+            if (err) {
+				res.json({
+					success: false,
+					message: "Something went wrong to fetch booking details.",
+					mongoose_error: JSON.stringify(err),
+					data: null
+				});
+				res.end();
+				return;
+            } else {
+				res.json({
+					success: true,
+					message: "Success",
+                    data: results,
+				});
+				res.end();
+				return;
+            }
+        })
+         
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: err })
+    }
+}
+
 //Appointment Summary/Details...............................................
 module.exports.bookingDetails = async (req, res) => {
     try {
@@ -2441,20 +2545,6 @@ module.exports. updatedBookingStatus = async (req, res) => {
             }
         } else {
             res.send({ success: false, message: "Status is Required", data: null })
-        }
-    } catch (err) {
-        res.send({ success: false, message: "Internal Server Error", data: null })
-    }
-}
-
-//bookingList 
-module.exports.getAllbooking = async (req, res) => {
-    try {
-        const data = await appointmentModel.find({})
-        if (data.length > 0) {
-            res.send({ success: true, message: "Get  All Booking Successfully", data: data })
-        } else {
-            res.send({ success: true, message: "Not Found Booking", data: null })
         }
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })

@@ -2,6 +2,7 @@ var mongoose = require('../node_modules/mongoose');
 const userServices = require("../models/userServicesModel.js");
 const services = require("../models/serviceModel.js");
 const districtModel = require('../models/dashboardModel/districtModel');
+const techteam = require('../models/dashboardModel/techTeam');
 var Config = require('../config/config');
 var helper = require('../helper.js');
 var moment = require('../node_modules/moment');
@@ -2468,7 +2469,7 @@ try{
         })
     },
 	
-	userSubmitFeedback: function(req, res, next){ //console.log('userSubmitFeedback'); 
+	userSubmitFeedback: async function(req, res, next){ //console.log('userSubmitFeedback'); 
 	
 		//console.log("REQUEST~~~", req.body);
         if (!req.body) {
@@ -2480,50 +2481,86 @@ try{
             res.end();
         }
 		
-        var posted_data = {};
-        posted_data.user_id = mongoose.Types.ObjectId(req.body.user_id) || "";
-        posted_data.user_name = req.body.user_name || "";
-		posted_data.technician_id = mongoose.Types.ObjectId(req.body.technician_id) || "";
-        posted_data.technician_name = req.body.technician_name || "";
-		posted_data.service_id = mongoose.Types.ObjectId(req.body.service_id) || ""; 
-        posted_data.booking_id = mongoose.Types.ObjectId(req.body.booking_id) || "";
-        posted_data.rating = req.body.rating || "";
-		posted_data.feedback_message = req.body.feedback_message || "";
-		if (!posted_data.user_id || !posted_data.user_name || !posted_data.technician_id || !posted_data.technician_name || !posted_data.service_id || !posted_data.booking_id || !posted_data.rating || !posted_data.feedback_message) {
-            res.json({
-                error: true,
-                message: "Required parameter is missing",
-                responseCode: 0
-            });
-            res.end();
-            return;
-        }
-		
-		var Feedback = helper.getModel('feedback');
-        var newFeedback = new Feedback(posted_data);
-		
-		newFeedback.save(function(errors, dbres) {
-			//console.log("errors", errors)
-			if(errors){
+		const { _id } = req.params;
+
+		const data = await appointmentModel.findById({_id: _id})
+        if (data._id) {
+ 
+			//check if feedback alreay submitted..
+			var Feedback = helper.getModel('feedback');
+			const is_exists = await Feedback.findOne({booking_id: data._id});
+			if(is_exists){
 				res.json({
-					error: true,
-					message: "Something went wrong, please try again: "+errors,
-					responseCode: 0
-				});
-				res.end();
-				return;
-			} else {
-				// return the information including token as JSON
-				res.json({
-					error: false,
-					message: 'Feedback saved success',
-					results: dbres,
-					responseCode: 1
+					success: false,
+					message: "Feedback already submitted!",
+					data: null
 				});
 				res.end();
 				return;
 			}
-		})
+
+			//Find team users..
+			var technician_ids = [];
+			var techteams = await techteam.findById(data.team_id);
+			if(techteams){
+				technician_ids = techteams.memberId
+			}
+
+			var posted_data = {};
+			posted_data.user_id = data.user_id;
+ 			posted_data.team_id = data.team_id;
+			posted_data.technician_ids = technician_ids;
+ 			posted_data.booking_id = data._id;
+			posted_data.technician_attitude = req.body.technician_attitude || "";
+			posted_data.overall_workmanship = req.body.overall_workmanship || "";
+			posted_data.job_cleaniness = req.body.job_cleaniness || "";
+			posted_data.feedback_message = req.body.feedback_message || "";
+			if (!posted_data.user_id || !posted_data.team_id || !posted_data.booking_id || !posted_data.technician_attitude || !posted_data.overall_workmanship || !posted_data.job_cleaniness) {
+				res.json({
+					success: false,
+					message: "Required parameter is missing",
+					data: null
+				});
+				res.end();
+				return;
+			}
+			
+			//make avg rating and kpi factor...
+			var sum  = (posted_data.technician_attitude+posted_data.overall_workmanship+posted_data.job_cleaniness);
+			posted_data.avg_rating = Math.floor(sum/3);
+			posted_data.kpi_factor = (((sum/15)*5)*0.24).toFixed(2);
+			var newFeedback = new Feedback(posted_data);
+			
+			newFeedback.save(function(errors, dbres) {
+				//console.log("errors", errors)
+				if(errors){
+					res.json({
+						success: false,
+						message: "Something went wrong, please try again: "+errors,
+						data: null
+					});
+					res.end();
+					return;
+				} else {
+					// return the information including token as JSON
+					res.json({
+						success: true,
+						message: 'Feedback saved success',
+						data: dbres,
+ 					});
+					res.end();
+					return;
+				}
+			})
+		}else{
+			res.json({
+                success: false,
+                message: "No booking details found!",
+                data: null
+            });
+            res.end();
+            return;
+		}
     },
 	
 	usersChatList: function(req, res, next){	//console.log('usersChatList');
