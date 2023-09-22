@@ -2031,6 +2031,9 @@ module.exports.getAllbooking = async (req, res) => {
         
         var match1 = {$match: {
 			user_id: mongoose.Types.ObjectId(user_id),
+            status: {
+                $ne:  'draft'
+            } 
 		}};
 
 		if(period == 'all'){
