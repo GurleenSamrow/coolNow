@@ -16,6 +16,12 @@ const userCartSchema   = new Schema({
     title: {
         type: String
     },
+    price: {
+        type: String
+    },
+    price_2: {
+        type: String
+    },
     numberOfunits: {
         type: String
     },
