@@ -485,10 +485,12 @@ module.exports.deletePromoCodeCoupon = async (req, res) => {
 //addTechTeam.................................
 module.exports.addTechTeam = async (req, res) => {
     try {
-        const { memberId, teamNme, Vehicle, selectZone, SelectPriority, days } = req.body;
-        if (memberId && teamNme && Vehicle && selectZone && SelectPriority && days) {
+        const { memberId, leaderId, driverId, teamNme, Vehicle, selectZone, SelectPriority, days } = req.body;
+        if (memberId && leaderId && driverId && teamNme && Vehicle && selectZone && SelectPriority && days) {
             const techInfo = new techteam({
                 memberId: memberId,
+                leaderId: leaderId,
+                driverId: driverId,
                 teamNme: teamNme,
                 Vehicle: Vehicle,
                 selectZone: selectZone,
@@ -496,7 +498,7 @@ module.exports.addTechTeam = async (req, res) => {
                 days: days
             })
             await techInfo.save()
-            res.send({ success: true, message: "Tech Team Add Successfully", data: techInfo })
+            res.send({ success: true, message: "Tech Team Added Successfully", data: techInfo })
         } else {
             res.send({ success: false, message: "All Fields Are Required", data: null })
         }
@@ -507,13 +509,15 @@ module.exports.addTechTeam = async (req, res) => {
 //updatedCoupon
 module.exports.updateTechTeam = async (req, res) => {
     try {
-        const { memberId, teamNme, Vehicle, selectZone, SelectPriority, _id, days } = req.body;
-        if (memberId && teamNme && Vehicle && selectZone && SelectPriority && days) {
+        const { memberId, leaderId, driverId, teamNme, Vehicle, selectZone, SelectPriority, _id, days } = req.body;
+        if (memberId && leaderId && driverId && teamNme && Vehicle && selectZone && SelectPriority && days) {
             const techData = await techteam.updateOne(
                 { _id: mongoose.Types.ObjectId(_id) },
                 {
                     $set: {
                         memberId: memberId,
+                        leaderId: leaderId,
+                        driverId: driverId,
                         teamNme: teamNme,
                         Vehicle: Vehicle,
                         selectZone: selectZone,
@@ -2039,9 +2043,12 @@ module.exports.getAllbooking = async (req, res) => {
 		if(period == 'all'){
 			var match2 = {$match: {}};
 		} else {
-            if(period == 'weekly'){
-				var start_date = moment().add(-7, 'days').format('YYYY-MM-DD');
-				var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');			
+            if(period == 'last_month'){
+				var start_date = moment().add(-1, 'month').startOf('month').format('YYYY-MM-DD');
+				var end_date =  moment().add(-1, 'month').endOf('month').format('YYYY-MM-DD');	
+			} else if(period == 'quarterly'){
+				var start_date = moment().startOf('quarter').startOf('day').format('YYYY-MM-DD');
+				var end_date = moment().endOf('quarter').endOf('day').format('YYYY-MM-DD');			
 			} else if(period == 'yearly'){
 				var start_date = moment().add(-1, 'year').format('YYYY-MM-DD');
 				var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');

@@ -72,7 +72,7 @@ const addOrUpdateCart = async (body) => {
 			{
 				$set: {
 					numberOfunits: parseInt(existingItem.numberOfunits) + parseInt(body.numberOfunits),
-					video: (body.video) ? body.video : existingItem.video,
+ 					video: (body.video) ? body.video : existingItem.video,
 					image: (body.image) ? body.image : existingItem.image,
 					comments: (body.comments) ? body.comments : existingItem.comments,
 				}
@@ -3630,92 +3630,227 @@ try{
     },
 
 	uploadProfilePhoto: async function(req, res, next){ 
-	try{
-		const _id = req.body.user_id;
-		if(_id){
-			const image  = await uploadImage.uploadImage(req.file)
-			const userDatas = await User.updateOne(
-                { _id: mongoose.Types.ObjectId(_id) },
-                {
-                    $set: {
-                        profile_photo: image
-                    }
-                })
-            if (userDatas.modifiedCount == 1) {
-				const userData = await User.find({_id:_id})
-                res.send({ success: true, message: "User Profile Updated Successfully", data: userData })
-            } else {
-                res.send({ success: false, message: "User Profile  Does't Updated", data: null })
-            }
+		try{
+			const _id = req.body.user_id;
+			if(_id){
+				const image  = await uploadImage.uploadImage(req.file)
+				const userDatas = await User.updateOne(
+					{ _id: mongoose.Types.ObjectId(_id) },
+					{
+						$set: {
+							profile_photo: image
+						}
+					})
+				if (userDatas.modifiedCount == 1) {
+					const userData = await User.find({_id:_id})
+					res.send({ success: true, message: "User Profile Updated Successfully", data: userData })
+				} else {
+					res.send({ success: false, message: "User Profile  Does't Updated", data: null })
+				}
 
-		}else{
-			res.send({ success: false, message: "UserId Fields Are Required", data: null })
+			}else{
+				res.send({ success: false, message: "UserId Fields Are Required", data: null })
+			}
+			// var post = req.body;
+			// //console.log(post)
+			
+			// var userId = (post.user_id) ? mongoose.Types.ObjectId(post.user_id) : ""; 
+			// var userType = (post.user_type) ? post.user_type : "";
+			// var fileLength = (req.files) ? req.files.length : 0;
+			// if(!userId || !userType || fileLength <=0) {
+			//     res.json({
+			//         error: true,
+			//         message: "Required parameters missing!",
+			// 		responseCode: 0
+			//     });
+			//     res.end();
+			//     return;
+			// }
+			
+			// if(userType == 'T'){
+			// 	var base_folder = path.join(BASE_URL, "public/uploads/technician");
+			// 	var site_url = SITE_PATH + "uploads/technician/";
+			// } else {
+			// 	var base_folder = path.join(BASE_URL, "public/uploads/customer");
+			// 	var site_url = SITE_PATH + "uploads/customer/";
+			// }
+			
+			// _uploadFiles(req, base_folder, function (succeeded, failed) {
+			// 	if (!succeeded.length) {
+			// 		var message = "Something went wrong to upload profile image.";
+			// 		var err_msg = JSON.stringify(makeMongooseErrorMsgArray(err));
+			// 		cb(false, message, err_msg);
+			// 	} else {
+			// 		var updateInfo = { profile_photo: succeeded[0] }
+			// 		var conditions = { _id: userId };
+			// 		User.findOneAndUpdate(conditions, {"$set": updateInfo}, {new: true}, function(err, user){
+			// 			if(err || !user){
+			// 				res.json({
+			// 					error: true,
+			// 					message: "Something went wrong to update profile photo "+JSON.stringify(err),
+			// 					responseCode: 0
+			// 				});
+			// 				res.end();
+			// 				return;       
+			// 			} else {
+			// 				res.json({
+			// 					error: false,
+			// 					message: "Photo updated successfully",
+			// 					result:{
+			// 						'image_name':succeeded[0],
+			// 						'image_path':site_url+succeeded[0]
+			// 					},
+			// 					responseCode: 1
+			// 				});
+			// 				res.end();
+			// 				return;
+			// 			}
+			// 		});
+			// 	}
+			// });
+		}catch(err){
+			response.success=false,
+			response.message="Internal Server Error",
+			response.data =null,
+			res.send(500).json(response)
 		}
-		// var post = req.body;
-		// //console.log(post)
-		
-		// var userId = (post.user_id) ? mongoose.Types.ObjectId(post.user_id) : ""; 
-		// var userType = (post.user_type) ? post.user_type : "";
-		// var fileLength = (req.files) ? req.files.length : 0;
-        // if(!userId || !userType || fileLength <=0) {
-        //     res.json({
-        //         error: true,
-        //         message: "Required parameters missing!",
-		// 		responseCode: 0
-        //     });
-        //     res.end();
-        //     return;
-        // }
-		
-		// if(userType == 'T'){
-		// 	var base_folder = path.join(BASE_URL, "public/uploads/technician");
-		// 	var site_url = SITE_PATH + "uploads/technician/";
-		// } else {
-		// 	var base_folder = path.join(BASE_URL, "public/uploads/customer");
-		// 	var site_url = SITE_PATH + "uploads/customer/";
-		// }
-		
-		// _uploadFiles(req, base_folder, function (succeeded, failed) {
-		// 	if (!succeeded.length) {
-		// 		var message = "Something went wrong to upload profile image.";
-		// 		var err_msg = JSON.stringify(makeMongooseErrorMsgArray(err));
-		// 		cb(false, message, err_msg);
-		// 	} else {
-		// 		var updateInfo = { profile_photo: succeeded[0] }
-		// 		var conditions = { _id: userId };
-		// 		User.findOneAndUpdate(conditions, {"$set": updateInfo}, {new: true}, function(err, user){
-		// 			if(err || !user){
-		// 				res.json({
-		// 					error: true,
-		// 					message: "Something went wrong to update profile photo "+JSON.stringify(err),
-		// 					responseCode: 0
-		// 				});
-		// 				res.end();
-		// 				return;       
-		// 			} else {
-		// 				res.json({
-		// 					error: false,
-		// 					message: "Photo updated successfully",
-		// 					result:{
-		// 						'image_name':succeeded[0],
-		// 						'image_path':site_url+succeeded[0]
-		// 					},
-		// 					responseCode: 1
-		// 				});
-		// 				res.end();
-		// 				return;
-		// 			}
-		// 		});
-		// 	}
-		// });
-	}catch(err){
-		response.success=false,
-		response.message="Internal Server Error",
-		response.data =null,
-		res.send(500).json(response)
-	}
-	}
+	},
 
+	kpiDashboard: function (req, res, next) {
+
+		const { technicianId } = req.params;
+        const { period } = req.query;
+   
+		if(period == 'quarterly'){
+			var start_date = moment().add(-3, 'month').format('YYYY-MM-DD');
+			var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+		} else if(period == 'yearly'){
+			var start_date = moment().add(-1, 'year').format('YYYY-MM-DD');
+			var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+		} else {
+			var start_date = moment().add(-1, 'month').format('YYYY-MM-DD');
+			var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+		}	
+ 		
+        var Feedback = helper.getModel("feedback");  
+        Feedback.find({technician_ids: mongoose.Types.ObjectId(technicianId), avg_rating: { $gt: 3 }, created_at: {'$gte': new Date(start_date), '$lt': new Date(end_date)}}).sort({_id: -1}).exec(function (err, results) {
+            if (err) {
+				res.json({
+					success: false,
+					message: "Something went wrong to fetch good feedback.",
+					mongoose_error: JSON.stringify(err),
+					data: null
+				});
+				res.end();
+				return;
+            } else {
+				Feedback.find({technician_ids: mongoose.Types.ObjectId(technicianId), avg_rating: { $lte: 3 }, created_at: {'$gte': new Date(start_date), '$lte': new Date(end_date)}}).sort({_id: -1}).exec(function (err, results2) {
+					if (err) {
+						res.json({
+							success: false,
+							message: "Something went wrong to fetch complaints.",
+							mongoose_error: JSON.stringify(err),
+							data: null
+						});
+						res.end();
+						return;
+					} else {
+						Feedback.aggregate([
+						{ $match: { technician_ids: mongoose.Types.ObjectId(technicianId) } },
+						{ $group: {_id: "$technician_ids", count: { $sum: 1 }, total_rating: {$sum: "$kpi_factor" } } }
+						]).exec(function (error, t_res) {
+							if (error) {
+								res.json({
+									success: false,
+									message: "Something went wrong to fetch rating.",
+									mongoose_error: JSON.stringify(err),
+									data: null
+								});
+								res.end();
+								return;
+							} else {
+								var kpi_factor = 0;
+								if(t_res.length>0){
+									kpi_factor = (t_res[0].total_rating/t_res[0].count).toFixed(2);
+								}
+								
+								res.json({
+									success: true,
+									message: "Success!",
+ 									data: { 
+										compliments: results.length,
+										complaints: results2.length,
+										kpi_factor: kpi_factor
+									}
+								});
+								res.end();
+								return;
+							}	
+						})
+					}
+				})
+            }
+        })
+    },
+
+	kpiDashboardFeebacks: function (req, res, next) {
+
+		const { technicianId, feedback_type} = req.params;
+        const { period } = req.query;
+  
+		var match = {};
+		if(feedback_type == 'complaints'){
+			match = { $lte: 3 };
+		}else if(feedback_type == 'compliments'){
+			match = { $gt: 3 };
+		}else{
+			res.json({
+                success: false,
+                message: 'Invalid keyword for KPI feedbacks!',
+				data : null
+			});
+            res.end();
+			return;
+		}
+
+		if(period == 'quarterly'){
+			var start_date = moment().add(-3, 'month').format('YYYY-MM-DD');
+			var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+		} else if(period == 'yearly'){
+			var start_date = moment().add(-1, 'year').format('YYYY-MM-DD');
+			var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+		} else {
+			var start_date = moment().add(-1, 'month').format('YYYY-MM-DD');
+			var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+		}	
+ 		
+        var Feedback = helper.getModel("feedback");  
+        Feedback.find({technician_ids: mongoose.Types.ObjectId(technicianId), avg_rating: match, created_at: {'$gte': new Date(start_date), '$lt': new Date(end_date)}}).sort({_id: -1}).exec(function (err, results) {
+            if (err) {
+				res.json({
+					success: false,
+					message: "Something went wrong to fetch feedbacks.",
+					mongoose_error: JSON.stringify(err),
+					data: null
+				});
+				res.end();
+				return;
+            } else { 
+				res.json({
+					success: true,
+					message: "Success!",
+					data: results
+				});
+				res.end();
+				return;
+			}
+        })
+    },
+	
+	feedbackMetrics: function (req, res, next) {
+
+		
+    },
 }; 
 
 	async function stripePayment(data) {
@@ -4258,6 +4393,14 @@ module.exports.addCartServices = async (req, res) => {
 							}
 						})
 						item.title = servicesData.title;
+
+						//check rate..
+						var price = price_2 = (sub_service_main.price ? sub_service_main.price : (servicesData.price ? servicesData.price : 0));
+						if(sub_service_main.price_2 > 0 && item.numberOfunits > 1){
+							price_2  =  parseInt((sub_service_main.price_2/2));
+						} 
+						item.price = parseInt(price);
+						item.price_2 = parseInt(price_2);
 						
 						items.push(item);
 	

@@ -31,4 +31,8 @@ module.exports = function(app) {
 	app.post('/technician_uploadprofilephoto', require('../controllers/api').uploadProfilePhoto);
 	app.post('/add/service', ServiceController.Add);
 	app.get('/get/service', ServiceController.getService);
+	app.get('/get/service', ServiceController.getService);
+	app.get('/technician/:technicianId/kpi-dashboard', require('../controllers/api').kpiDashboard);
+	app.get('/technician/:technicianId/kpi-dashboard/:feedback_type', require('../controllers/api').kpiDashboardFeebacks);
+	app.get('/technician/:technicianId/feedback-metrics', require('../controllers/api').feedbackMetrics);
 };
