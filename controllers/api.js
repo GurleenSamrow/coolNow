@@ -3849,7 +3849,66 @@ try{
 	
 	feedbackMetrics: function (req, res, next) {
 
-		
+		const { technicianId} = req.params;
+		const { period } = req.query;
+
+		if(period == 'quarterly'){
+			var start_date = moment().add(-3, 'month').format('YYYY-MM-DD');
+			var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+		} else if(period == 'yearly'){
+			var start_date = moment().add(-1, 'year').format('YYYY-MM-DD');
+			var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+		} else {
+			var start_date = moment().add(-1, 'month').format('YYYY-MM-DD');
+			var end_date = moment().add(+1, 'days').format('YYYY-MM-DD');
+		}	
+ 		
+        var Feedback = helper.getModel("feedback");  
+        Feedback.find({technician_ids: mongoose.Types.ObjectId(technicianId), created_at: {'$gte': new Date(start_date), '$lt': new Date(end_date)}}).sort({_id: -1}).exec(function (err, results) {
+            if (err) {
+				res.json({
+					success: false,
+					message: "Something went wrong to fetch feedback metrics.",
+					mongoose_error: JSON.stringify(err),
+					data: null
+				});
+				res.end();
+				return;
+            } else { 
+				if(results.length > 0){
+					var feedbacks = {};
+					[1, 2, 3, 4, 5].map(function(rating, v){
+						feedbacks[rating] = {technician_attitude : 0, overall_workmanship: 0, job_cleaniness: 0};
+						results.map(function(item, index){
+							if(item.technician_attitude == rating){
+								feedbacks[rating].technician_attitude++;	
+							}
+							if(item.overall_workmanship == rating){
+								feedbacks[rating].overall_workmanship++;
+							}
+							if(item.job_cleaniness == rating){
+								feedbacks[rating].job_cleaniness++;
+							}
+ 						})
+					})
+					res.json({
+						success: true,
+						message: "Success!",
+						data: feedbacks
+					});
+					res.end();
+					return;
+				}else{
+					res.json({
+						success: false,
+						message: "No feedback data is available for the technician!",
+						data: null
+					});
+					res.end();
+					return;
+				}
+			}
+        })
     },
 }; 
 
