@@ -558,13 +558,17 @@ module.exports.getAllTechTeam = async (req, res) => {
                     as: "datainfo"
                 }
             },
-            {
-                $unwind: "$datainfo"
-            },
+            {$unwind: {
+				"path": "$datainfo",
+				"preserveNullAndEmptyArrays": true
+			}},
             {
                 $group: {
                     _id: "$_id",
                     teamNme: { $first: "$teamNme" },
+                    memberId: { $first: "$memberId" },
+                    leaderId: { $first: "$leaderId" },
+                    driverId: { $first: "$driverId" },
                     days: { $first: "$days" },
                     Vehicle: { $first: "$Vehicle" },
                     selectZone: { $first: "$selectZone" },
