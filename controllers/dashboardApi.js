@@ -139,11 +139,11 @@ const calculateRateAndTime = async (carts) => {
     var totalPrice =  0;
     var items = [];
     if(carts.length > 0){
-        carts.map(function(item, index){
+        await Promise.all(carts.map(async function(item, index){
             if(item.services.length > 0){
-                item.services.map(function(service, index2){
+                await Promise.all(item.services.map(async function(service, index2){
                     if(service.sub_service.length > 0){
-                        service.sub_service.map(function(sub_service, index3){
+                        await Promise.all(service.sub_service.map(async function(sub_service, index3){
                             if(item.subServicesId.toString() == sub_service._id.toString()){
                                 //check the unit and unit2 duration..
                                 var duration = (sub_service.duration ? sub_service.duration : (service.duration ? service.duration : 0));
@@ -156,22 +156,36 @@ const calculateRateAndTime = async (carts) => {
                                 totalTime += duration;
 
                                 //check rate..
+                                var pp = null;
                                 var price = (sub_service.price ? sub_service.price : (service.price ? service.price : 0));
-                                if(sub_service.price_2 > 0 && item.numberOfunits > 1){
-                                    price  =  parseInt((sub_service.price_2/2));
-                                } 
+                                if(item.packageId){
+                                    //Find the package ID>>..
+                                    var pp = await package.findById(item.packageId);
+                                    if(pp && pp._id){
+                                        if(pp.package_price && pp.package_price[item.numberOfunits]){
+                                            price = parseInt((pp.package_price[item.numberOfunits]/item.numberOfunits));
+                                        }else{
+                                            price = parseInt((pp.unit_price*pp.services_count)); 
+                                        }
+                                    }
+                                }else{
+                                    if(sub_service.price_2 > 0 && item.numberOfunits > 1){
+                                        price  =  parseInt((sub_service.price_2/2));
+                                    } 
+                                }                               
                                 totalPrice += parseInt(price*item.numberOfunits);
 
                                 const { services, ...rest } = item;
                                 rest.price = price;
                                 rest.duration = duration;
+                                rest.package = pp;
                                 items.push(rest);
                             }
-                        })
+                        }))
                     }
-                })
+                }))
             }
-        });
+        }));
 
         if(totalTime > 0){
             totalTime = totalTime+20;
@@ -801,6 +815,30 @@ module.exports.getServicesById = async (req, res) => {
             res.send({ success: true, message: "Get Services Details Successfully", data: servicesData })
         } else {
             res.send({ success: true, message: "Not Found Services", data: null })
+        }
+    } catch (err) {
+        res.send({ success: false, message: "Internal Server Error", data: null })
+    }
+}
+
+
+//getServicesPackage
+module.exports.getServicesPackage = async (req, res) => {
+    try {
+        var subServiceId = mongoose.Types.ObjectId(req.params.id);
+        if (!subServiceId) {
+            res.json({
+                success: false,
+                message: 'subServiceId parameter is missing in URL',
+                data: null
+            });
+            res.end();
+        }
+        const servicesData = await package.find({ subServicesId : subServiceId, services_count : { '$gt' : 1}})
+        if (servicesData.length > 0) {
+            res.send({ success: true, message: "Get packages successfully!", data: servicesData })
+        } else {
+            res.send({ success: true, message: "No package found!", data: null })
         }
     } catch (err) {
         res.send({ success: false, message: "Internal Server Error", data: null })
@@ -2444,16 +2482,20 @@ module.exports.userAppointmentsReschedule = async (req, res) => {
 //addpackage
 module.exports.addPackage = async (req, res) => {
     try {
-        const { package_name, description, package_price,items } = req.body;
-        if (package_name && description && package_price && items ) {
-            const vehicle = new package({
+        const { package_name, type, description, package_price, unit_price, services_count, subServicesId, features} = req.body;
+        if (package_name && type &&  package_price && unit_price && services_count && subServicesId) {
+            const pack = new package({
                 package_name: package_name,
                 description: description,
+                type: type,
+                subServicesId:subServicesId,
+                services_count:services_count,
+                unit_price:unit_price,
                 package_price: package_price,
-                items:items,
-            })
-            await vehicle.save()
-            res.status(201).send({ success: true, message: "Pacakage Added Successfully", data: vehicle })
+                features:features,
+            });
+            await pack.save();
+            res.status(201).send({ success: true, message: "Pacakage Added Successfully!", data: pack })
         } else {
             res.status(400).send({ success: false, message: "All Fields Are Required", data: null })
         }
@@ -2466,21 +2508,23 @@ module.exports.addPackage = async (req, res) => {
 module.exports.updatedPackage = async (req, res) => {
     try {
         const { _id } = req.params;
-        const { package_name, description, package_price,items } = req.body;
-        if (package_name && description && package_price && items )  {
+        const { package_name, description, package_price, unit_price, services_count, features } = req.body;
+        if (package_name && package_price && unit_price && services_count)  {
             const pacakageUpdate = await package.updateOne(
                 { _id: mongoose.Types.ObjectId(_id) },
                 {
                     $set: {
                         package_name: package_name,
                         description: description,
+                        services_count:services_count,
+                        unit_price:unit_price,
                         package_price: package_price,
-                        items:items,
+                        features:features,
                     }
                 }
             )
             if (pacakageUpdate.modifiedCount === 1) {
-                res.send({ success: true, message: "Pacakage Updated Successfully", data: null })
+                res.send({ success: true, message: "Pacakage Updated Successfully!", data: null })
             } else {
                 res.send({ success: false, message: "Pacakage Does't Updated", data: null })
             }

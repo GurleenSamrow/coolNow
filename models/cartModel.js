@@ -13,6 +13,10 @@ const userCartSchema   = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'service.sub_service',
     },
+    packageId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'package',
+    },
     title: {
         type: String
     },
