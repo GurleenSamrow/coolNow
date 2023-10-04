@@ -72,7 +72,8 @@ const addOrUpdateCart = async (body) => {
 			{
 				$set: {
 					numberOfunits: parseInt(existingItem.numberOfunits) + parseInt(body.numberOfunits),
- 					video: (body.video) ? body.video : existingItem.video,
+					packageId: (body.packageId) ? body.packageId : existingItem.packageId,
+ 					packageId: (body.video) ? body.video : existingItem.video,
 					image: (body.image) ? body.image : existingItem.image,
 					comments: (body.comments) ? body.comments : existingItem.comments,
 				}
@@ -4561,6 +4562,7 @@ module.exports.updateCart = async (req, res) => {
 							{
 								$set: {
 									numberOfunits:  (item.numberOfunits) ? item.numberOfunits : existingItem.numberOfunits,
+									packageId: (body.packageId) ? body.packageId : existingItem.packageId,
 									video: (item.video) ? item.video : existingItem.video,
 									image: (item.image) ? item.image : existingItem.image,
 									comments: (item.comments) ? item.comments : existingItem.comments,

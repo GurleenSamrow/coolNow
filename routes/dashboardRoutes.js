@@ -58,6 +58,7 @@ module.exports = function (app) {
     app.put('/services/:id', dashboardController.updatedServices);
     app.delete('/services/:id', dashboardController.deleteServices);
     app.get('/services/:id', dashboardController.getServicesById);
+    app.get('/services/:id/package', dashboardController.getServicesPackage);
 
 
     //Banner..................................

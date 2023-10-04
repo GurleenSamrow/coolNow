@@ -5,30 +5,37 @@
 		package_name: {
 			type: String,
 			trim: true,
-			//required: true
-		},
+ 		},
 		description: {
 			type: String,
-			//required: false,
-			trim: true
+ 			trim: true
 		},
-		package_price: {
+		type: {
+			type: String,
+ 		},
+		subServicesId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'service.sub_service',
+		},
+		services_count: {
 			type: Number,
-			//required: true
-		},
-		items: {
-			type: Array, // list of services 
-			//required: true
-		},
+ 		},
+		unit_price: {
+			type: Number,
+ 		},
+		package_price: {
+			type: Object, 
+ 		},
+		features: {
+			type: Array, 
+ 		},
 		package_status: {
 			type: Boolean,
-			//required: true,
-			default: true
+ 			default: true
 		},
 		is_deleted: {
 			type: Boolean,
-			//required: false,
-			default: false
+ 			default: false
 		},
 		created_at: { type: Date, default: Date.now },
  		updated_at: { type: Date, default: Date.now }
